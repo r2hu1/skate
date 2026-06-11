@@ -9,6 +9,7 @@ import { scoreChunk } from "./scorer";
 import { rankChunks, selectClips } from "./ranker";
 import { renderClips, exportMetadata } from "./renderer";
 import { trackFacesInClip, generateCropForClip } from "./tracker";
+import { tui } from "../ui/tui";
 
 export async function runPipeline(options: PipelineOptions): Promise<AnalysisResult> {
   const { source, isUrl, config, outputDir, skipDownload, skipRender } = options;
@@ -19,6 +20,7 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
   let videoName: string;
 
   if (isUrl && !skipDownload) {
+    tui.startStep("Download");
     const downloadedPath = await downloadVideo(source, tempBase);
     videoName = deriveVideoName(downloadedPath);
     const tempDir = join(tempBase, videoName);
@@ -34,15 +36,15 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
   if (!existsSync(tempDir)) mkdirSync(tempDir, { recursive: true });
   const videoOutputDir = join(outputDir, videoName);
 
+  tui.startStep("Transcribe");
   const audioPath = await extractAudio(videoPath, tempDir);
 
   const transcript = await transcribeAudio(audioPath, cacheDir);
-
   await Bun.write(join(tempDir, "transcript.json"), JSON.stringify(transcript, null, 2));
 
-  console.log(`  Chunking transcript...`);
+  tui.startStep("Chunk & Score");
   const chunks = chunkTranscript(transcript);
-  console.log(`  Created ${chunks.length} chunks`);
+  tui.log(`Created ${chunks.length} chunks`);
 
   const scored: ScoredChunk[] = chunks.map((chunk, i) => ({
     index: i,
@@ -50,20 +52,13 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
     heuristic: scoreChunk(chunk),
   }));
 
-  console.log(`  Scoring complete. Top scores:`);
-  const sorted = [...scored].sort((a, b) => b.heuristic.total - a.heuristic.total);
-  for (const s of sorted.slice(0, 5)) {
-    console.log(`    [${s.index}] Score: ${s.heuristic.total}/100 | "${s.chunk.text.slice(0, 60)}..."`);
-  }
-
+  tui.startStep("AI Rank");
   const ranked = await rankChunks(scored, config.clips, config.ollamaUrl, config.model);
-  console.log(`\n  AI Rankings:`);
-  for (const r of ranked.slice(0, 5)) {
-    console.log(`    ${r.score.toFixed(1)}/10 | ${r.title.slice(0, 60)}`);
-  }
+  tui.setRankings(ranked);
 
+  tui.startStep("Select Clips");
   const selected = selectClips(ranked, scored, config.clips, config.minLength, config.maxLength);
-  console.log(`\n  Selected ${selected.length} clips for rendering`);
+  tui.log(`Selected ${selected.length} clips`);
 
   const metadata = selected.map((s, i) => ({
     title: ranked.find(r => Math.abs(r.start - s.chunk.start) < 1)?.title || `Clip ${i + 1}`,
@@ -85,16 +80,18 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
     if (existsSync(cropCacheFile)) {
       try {
         cachedCropData = JSON.parse(await Bun.file(cropCacheFile).text());
-        console.log(`  Using cached crop data`);
+        tui.log("Using cached crop data");
       } catch {
         cachedCropData = null;
       }
     }
 
     if (!cachedCropData) {
-      console.log(`  Tracking faces for crop data...`);
+      tui.startStep("Track Faces");
       const cropMap: Record<number, any> = {};
-      for (const s of selected) {
+      for (let i = 0; i < selected.length; i++) {
+        const s = selected[i];
+        tui.log(`Tracking faces for clip ${i + 1}/${selected.length}`);
         const faces = await trackFacesInClip(videoPath, s.chunk.start, s.chunk.end);
         const cropData = await generateCropForClip(videoPath, faces, 1920, 1080, s.chunk.end - s.chunk.start);
         cropMap[s.index] = cropData;
@@ -107,9 +104,9 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
       (s as any).cropData = cachedCropData[s.index] || null;
     }
 
+    tui.startStep("Render Clips");
     await renderClips(videoPath, selected, config.subtitleStyle, videoOutputDir);
-    await exportMetadata(metadata, videoOutputDir);
-    console.log(`\n  Output: ${videoOutputDir}/`);
+    tui.done(videoOutputDir);
   }
 
   const result: AnalysisResult = {
