@@ -9,6 +9,7 @@ import { scoreChunk } from "./scorer";
 import { rankChunks, selectClips } from "./ranker";
 import { renderClips, exportMetadata } from "./renderer";
 import { trackFacesInClip, generateCropForClip } from "./tracker";
+import { getSourceDimensions } from "../vision/crop";
 import { tui } from "../ui/tui";
 
 export async function runPipeline(options: PipelineOptions): Promise<AnalysisResult> {
