@@ -100,6 +100,7 @@ export interface SkateConfig {
   outputDir: string;
   cacheDir: string;
   ollamaUrl: string;
+  crop: boolean;
 }
 
 export type DependencyStatus = "ok" | "missing" | "error";
@@ -119,4 +120,5 @@ export interface PipelineOptions {
   outputDir: string;
   skipDownload?: boolean;
   skipRender?: boolean;
+  crop?: boolean;
 }
