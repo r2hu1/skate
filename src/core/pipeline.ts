@@ -12,7 +12,7 @@ import { trackFacesInClip, generateCropForClip } from "./tracker";
 import { tui } from "../ui/tui";
 
 export async function runPipeline(options: PipelineOptions): Promise<AnalysisResult> {
-  const { source, isUrl, config, outputDir, skipDownload, skipRender } = options;
+  const { source, isUrl, config, outputDir, skipDownload, skipRender, crop } = options;
   const cacheDir = getCacheDir(config);
   const tempBase = join(process.cwd(), "temp");
 
@@ -73,11 +73,13 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
     subtitleFile: `clip-${String(i + 1).padStart(2, "0")}.srt`,
   }));
 
+  const shouldCrop = crop !== false && config.crop !== false;
+
   if (!skipRender) {
     const cropCacheFile = join(tempDir, "crop-data.json");
     let cachedCropData: Record<number, any> | null = null;
 
-    if (existsSync(cropCacheFile)) {
+    if (shouldCrop && existsSync(cropCacheFile)) {
       try {
         cachedCropData = JSON.parse(await Bun.file(cropCacheFile).text());
         tui.log("Using cached crop data");
@@ -86,22 +88,26 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
       }
     }
 
-    if (!cachedCropData) {
+    if (shouldCrop && !cachedCropData) {
       tui.startStep("Track Faces");
+      const srcInfo = getSourceDimensions(videoPath);
+      tui.log(`Source: ${srcInfo.width}x${srcInfo.height}`);
       const cropMap: Record<number, any> = {};
       for (let i = 0; i < selected.length; i++) {
         const s = selected[i];
         tui.log(`Tracking faces for clip ${i + 1}/${selected.length}`);
         const faces = await trackFacesInClip(videoPath, s.chunk.start, s.chunk.end);
-        const cropData = await generateCropForClip(videoPath, faces, 1920, 1080, s.chunk.end - s.chunk.start);
+        const cropData = await generateCropForClip(videoPath, faces, srcInfo.width, srcInfo.height, s.chunk.end - s.chunk.start);
         cropMap[s.index] = cropData;
       }
       await Bun.write(cropCacheFile, JSON.stringify(cropMap));
       cachedCropData = cropMap;
     }
 
-    for (const s of selected) {
-      (s as any).cropData = cachedCropData[s.index] || null;
+    if (shouldCrop) {
+      for (const s of selected) {
+        (s as any).cropData = cachedCropData?.[s.index] || null;
+      }
     }
 
     tui.startStep("Render Clips");
