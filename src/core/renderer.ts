@@ -2,6 +2,7 @@ import { join } from "path";
 import { existsSync } from "fs";
 import type { ScoredChunk, CropFrame, SubtitleStyle } from "../types";
 import { generateSRT, generateASS } from "./subtitles";
+import { buildCropFilterString, getSourceDimensions } from "../vision/crop";
 
 const FFMPEG_PATHS = [
   "/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg",
@@ -59,9 +60,14 @@ export async function cutClip(
   const filterParts: string[] = [];
 
   if (cropData && cropData.length > 0) {
-    const avgX = Math.round(cropData.reduce((s, c) => s + c.x, 0) / cropData.length);
-    const avgY = Math.round(cropData.reduce((s, c) => s + c.y, 0) / cropData.length);
-    filterParts.push(`crop=${cropData[0].width}:${cropData[0].height}:${avgX}:${avgY}`);
+    const expr = buildCropFilterString(cropData, 30);
+    if (expr) {
+      filterParts.push(expr);
+    } else {
+      const avgX = Math.round(cropData.reduce((s, c) => s + c.x, 0) / cropData.length);
+      const avgY = Math.round(cropData.reduce((s, c) => s + c.y, 0) / cropData.length);
+      filterParts.push(`crop=${cropData[0].width}:${cropData[0].height}:${avgX}:${avgY}`);
+    }
   }
 
   filterParts.push("scale=1080:1920:force_original_aspect_ratio=decrease");
