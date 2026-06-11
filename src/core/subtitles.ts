@@ -3,9 +3,30 @@ import type { WordTimestamp, SubtitleStyle } from "../types";
 const MAX_LINE_LENGTH = 42;
 const MAX_DISPLAY_DURATION = 3.5;
 
-export function generateSRT(words: WordTimestamp[], style: SubtitleStyle = "minimal", offset = 0): string {
+export function generateSRT(words: WordTimestamp[], _style: SubtitleStyle = "minimal", offset = 0): string {
   const groups = groupWordsIntoCaptions(words, offset);
-  return groups.map((group, i) => formatSRTBlock(i + 1, group, style)).join("\n\n");
+  return groups.map((group, i) => formatSRTBlock(i + 1, group)).join("\n\n");
+}
+
+export function generateASS(words: WordTimestamp[], _style: SubtitleStyle = "minimal", offset = 0): string {
+  const groups = groupWordsIntoCaptions(words, offset);
+
+  const header = `[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Helvetica,16,&H00000000,&H00000000,&H00000000,&H00FFFFFF,0,0,0,0,100,100,0,0,3,1,0,2,20,20,40,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+`;
+
+  const events = groups.map((group, i) => formatASSEvent(i + 1, group));
+  return header + events.join("\n");
 }
 
 interface CaptionGroup {
@@ -50,13 +71,14 @@ function groupWordsIntoCaptions(words: WordTimestamp[], offset = 0): CaptionGrou
   return groups;
 }
 
-function formatSRTBlock(index: number, group: CaptionGroup, style: SubtitleStyle): string {
-  const start = formatTime(group.start);
-  const end = formatTime(group.end);
-  let text = group.text;
-  if (style === "tiktok") text = text.toUpperCase();
-  else if (style === "mrbeast") text = text.split(" ").map(w => w.toUpperCase()).join(" ");
-  return `${index}\n${start} --> ${end}\n${text}`;
+function formatSRTBlock(index: number, group: CaptionGroup): string {
+  return `${index}\n${formatTime(group.start)} --> ${formatTime(group.end)}\n${group.text}`;
+}
+
+function formatASSEvent(_index: number, group: CaptionGroup): string {
+  const start = formatASSTime(group.start);
+  const end = formatASSTime(group.end);
+  return `Dialogue: 0,${start},${end},Default,,0,0,0,,${group.text}`;
 }
 
 function formatTime(seconds: number): string {
@@ -67,8 +89,14 @@ function formatTime(seconds: number): string {
   return `${pad(h)}:${pad(m)}:${pad(s)},${pad(ms, 3)}`;
 }
 
+function formatASSTime(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  const cs = Math.floor((seconds % 1) * 100);
+  return `${pad(h)}:${pad(m)}:${pad(s)}.${pad(cs, 2)}`;
+}
+
 function pad(num: number, length = 2): string {
   return String(num).padStart(length, "0");
 }
-
-
