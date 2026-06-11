@@ -8,6 +8,7 @@ import { chunkTranscript } from "./chunker";
 import { scoreChunk } from "./scorer";
 import { rankChunks, selectClips } from "./ranker";
 import { renderClips, exportMetadata } from "./renderer";
+import { trackFacesInClip, generateCropForClip } from "./tracker";
 
 export async function runPipeline(options: PipelineOptions): Promise<AnalysisResult> {
   const { source, isUrl, config, outputDir, skipDownload, skipRender } = options;
@@ -78,6 +79,34 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
   }));
 
   if (!skipRender) {
+    const cropCacheFile = join(tempDir, "crop-data.json");
+    let cachedCropData: Record<number, any> | null = null;
+
+    if (existsSync(cropCacheFile)) {
+      try {
+        cachedCropData = JSON.parse(await Bun.file(cropCacheFile).text());
+        console.log(`  Using cached crop data`);
+      } catch {
+        cachedCropData = null;
+      }
+    }
+
+    if (!cachedCropData) {
+      console.log(`  Tracking faces for crop data...`);
+      const cropMap: Record<number, any> = {};
+      for (const s of selected) {
+        const faces = await trackFacesInClip(videoPath, s.chunk.start, s.chunk.end);
+        const cropData = await generateCropForClip(videoPath, faces, 1920, 1080, s.chunk.end - s.chunk.start);
+        cropMap[s.index] = cropData;
+      }
+      await Bun.write(cropCacheFile, JSON.stringify(cropMap));
+      cachedCropData = cropMap;
+    }
+
+    for (const s of selected) {
+      (s as any).cropData = cachedCropData[s.index] || null;
+    }
+
     await renderClips(videoPath, selected, config.subtitleStyle, videoOutputDir);
     await exportMetadata(metadata, videoOutputDir);
     console.log(`\n  Output: ${videoOutputDir}/`);
