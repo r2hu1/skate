@@ -13,6 +13,12 @@
   "peerDependencies": {
     "typescript": "^5"
   },
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "setup-python": "mkdir -p ~/.skate && python3 -m venv ~/.skate/venv && ~/.skate/venv/bin/pip3 install -r scripts/requirements.txt"
+  },
   "dependencies": {
     "ink": "^5.2.0",
     "react": "^19.1.0"
