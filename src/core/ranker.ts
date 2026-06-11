@@ -1,5 +1,6 @@
 import type { ScoredChunk, RankingResult } from "../types";
 import { rankWithAI } from "../ai/ranking";
+import { tui } from "../ui/tui";
 
 export async function rankChunks(
   scoredChunks: ScoredChunk[],
@@ -10,14 +11,13 @@ export async function rankChunks(
   const sorted = [...scoredChunks].sort((a, b) => b.heuristic.total - a.heuristic.total);
   const candidates = sorted.slice(0, Math.min(topN + 2, sorted.length));
 
-  console.log(`  Sending ${candidates.length} top chunks to AI for ranking...`);
+  tui.log(`Sending ${candidates.length} top chunks to AI...`);
 
   try {
     const results = await rankWithAI(candidates, ollamaUrl, model);
     return results;
   } catch (err) {
-    console.warn(`  AI ranking failed: ${err}`);
-    console.warn("  Falling back to heuristic-only ranking");
+    tui.log(`AI ranking failed, using heuristics`);
 
     return candidates.map((c, i) => ({
       title: c.chunk.text.slice(0, 80) + (c.chunk.text.length > 80 ? "..." : ""),
