@@ -40,7 +40,8 @@ export async function renderClips(
     await Bun.write(srtPath, generateSRT(chunk.chunk.words, subtitleStyle, chunkStart));
     await Bun.write(assPath, generateASS(chunk.chunk.words, subtitleStyle, chunkStart));
 
-    await cutClip(sourceFile, clipPath, chunk.chunk.start, chunk.chunk.end, assPath, subtitleStyle);
+    const cropData = (chunk as any).cropData;
+    await cutClip(sourceFile, clipPath, chunk.chunk.start, chunk.chunk.end, assPath, subtitleStyle, cropData);
   }
 }
 
