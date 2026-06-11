@@ -55,13 +55,14 @@ export async function cutClip(
   srtPath?: string,
   subtitleStyle?: SubtitleStyle,
   cropData?: CropFrame[],
+  sourceFps: number = 30,
 ): Promise<void> {
   const duration = end - start;
   const tempRaw = outputPath.replace(".mp4", "-raw.mp4");
   const filterParts: string[] = [];
 
   if (cropData && cropData.length > 0) {
-    const expr = buildCropFilterString(cropData, 30);
+    const expr = buildCropFilterString(cropData, sourceFps);
     if (expr) {
       filterParts.push(expr);
     } else {
