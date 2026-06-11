@@ -2,7 +2,7 @@ import { join } from "path";
 import { existsSync } from "fs";
 import type { ScoredChunk, CropFrame, SubtitleStyle } from "../types";
 import { generateSRT, generateASS } from "./subtitles";
-import { buildCropFilterString } from "../vision/crop";
+import { buildCropFilterString, getSourceFps } from "../vision/crop";
 
 const FFMPEG_PATHS = [
   "/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg",
@@ -27,6 +27,7 @@ export async function renderClips(
   outputDir: string,
 ): Promise<void> {
   ensureOutputDirs(outputDir);
+  const sourceFps = getSourceFps(sourceFile);
 
   for (let i = 0; i < selected.length; i++) {
     const chunk = selected[i];
@@ -42,7 +43,7 @@ export async function renderClips(
     await Bun.write(assPath, generateASS(chunk.chunk.words, subtitleStyle, chunkStart));
 
     const cropData = (chunk as any).cropData;
-    await cutClip(sourceFile, clipPath, chunk.chunk.start, chunk.chunk.end, assPath, subtitleStyle, cropData);
+    await cutClip(sourceFile, clipPath, chunk.chunk.start, chunk.chunk.end, assPath, subtitleStyle, cropData, sourceFps);
   }
 }
 
