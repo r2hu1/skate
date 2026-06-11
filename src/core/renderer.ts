@@ -59,7 +59,9 @@ export async function cutClip(
   const filterParts: string[] = [];
 
   if (cropData && cropData.length > 0) {
-    filterParts.push(`crop=${cropData[0].width}:${cropData[0].height}:${cropData[0].x}:${cropData[0].y}`);
+    const avgX = Math.round(cropData.reduce((s, c) => s + c.x, 0) / cropData.length);
+    const avgY = Math.round(cropData.reduce((s, c) => s + c.y, 0) / cropData.length);
+    filterParts.push(`crop=${cropData[0].width}:${cropData[0].height}:${avgX}:${avgY}`);
   }
 
   filterParts.push("scale=1080:1920:force_original_aspect_ratio=decrease");
