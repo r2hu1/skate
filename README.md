@@ -114,6 +114,15 @@ bun start -- render video.mp4
 bun start -- watch ./videos
 ```
 
+### Disable face tracking
+
+```bash
+bun start -- clip video.mp4 --no-crop
+bun start -- youtube https://youtube.com/watch?v=abc123 --no-crop
+```
+
+By default, Skate tracks faces for smart vertical framing. Pass `--no-crop` to use a static center crop instead.
+
 ### Check dependencies
 
 ```bash
