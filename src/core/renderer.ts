@@ -2,7 +2,7 @@ import { join } from "path";
 import { existsSync } from "fs";
 import type { ScoredChunk, CropFrame, SubtitleStyle } from "../types";
 import { generateSRT, generateASS } from "./subtitles";
-import { buildCropFilterString, getSourceDimensions } from "../vision/crop";
+import { buildCropFilterString } from "../vision/crop";
 
 const FFMPEG_PATHS = [
   "/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg",
