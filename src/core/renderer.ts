@@ -96,7 +96,7 @@ export async function cutClip(
     const subProc = Bun.spawnSync([
       ffmpeg,
       "-i", tempRaw,
-      "-vf", `subtitles=${srtPath}`,
+      "-vf", `ass=${srtPath}`,
       "-c:a", "copy",
       "-y",
       outputPath,
