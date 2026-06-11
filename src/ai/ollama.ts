@@ -10,7 +10,7 @@ export async function queryOllama(
     stream: false,
     options: {
       temperature: 0.3,
-      num_predict: 2048,
+      num_predict: -1,
     },
   };
 
@@ -30,8 +30,8 @@ export async function queryOllama(
 
   const data = await res.json() as any;
   const response = data.response || "";
-  if (!response && data.error) {
-    console.warn(`  Ollama error: ${data.error}`);
+  if (!response) {
+    console.warn(`  Ollama response empty. done=${data.done} error=${data.error || "none"}`);
   }
   return response;
 }
