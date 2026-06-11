@@ -56,16 +56,16 @@ Each video flows through a fixed sequence of steps:
 
 ## Technology Stack
 
-| Component | Tool | Why |
-|---|---|---|
-| Runtime | **Bun** | Fast startup, native TypeScript, great CLI tooling |
-| UI | **Ink + React** | Progress bars, interactive menus, real-time logs |
-| Video Download | **yt-dlp** | Supports YouTube, playlists, channels, Shorts |
-| Speech Recognition | **faster-whisper** | Local transcription with word-level timestamps |
-| Computer Vision | **OpenCV** | Scene detection, motion analysis, blur detection |
-| Face Tracking | **MediaPipe** | Real-time multi-face detection and landmark tracking |
-| AI / LLM | **Ollama** (`qwen3:8b`) | Local LLM for virality scoring and metadata generation |
-| Video Processing | **FFmpeg** | Cutting, cropping, subtitle burn-in, thumbnail export |
+| Component          | Tool                    | Why                                                    |
+| ------------------ | ----------------------- | ------------------------------------------------------ |
+| Runtime            | **Bun**                 | Fast startup, native TypeScript, great CLI tooling     |
+| UI                 | **Ora + React**         | Progress bars, interactive menus, real-time logs       |
+| Video Download     | **yt-dlp**              | Supports YouTube, playlists, channels, Shorts          |
+| Speech Recognition | **faster-whisper**      | Local transcription with word-level timestamps         |
+| Computer Vision    | **OpenCV**              | Scene detection, motion analysis, blur detection       |
+| Face Tracking      | **MediaPipe**           | Real-time multi-face detection and landmark tracking   |
+| AI / LLM           | **Ollama** (`qwen3:8b`) | Local LLM for virality scoring and metadata generation |
+| Video Processing   | **FFmpeg**              | Cutting, cropping, subtitle burn-in, thumbnail export  |
 
 > **Important:** Ollama is never used for transcription or generating timestamps — only for ranking and metadata.
 
@@ -132,6 +132,7 @@ After transcription, the transcript is split into segments of **30–90 seconds*
 ```
 
 **Chunking rules:**
+
 - Break on natural pauses and silences
 - Break on topic shifts or speaker changes
 - Never cut mid-sentence
@@ -143,13 +144,13 @@ After transcription, the transcript is split into segments of **30–90 seconds*
 
 Every chunk gets a score from 0–100 based on five signals. This runs fast and locally — no LLM needed.
 
-| Signal | What It Detects | Weight |
-|---|---|---|
-| **Speaking Rate** | Increased pace = higher engagement | 15% |
-| **Emotional Language** | Words like *secret, mistake, never, million* | 20% |
-| **Sentiment Shift** | Strong positive/negative swings | 15% |
-| **Story Structure** | Patterns: *problem → conflict → lesson → surprise* | 25% |
-| **Engagement Hooks** | Phrases like *"did you know", "here's why", "what happened next"* | 25% |
+| Signal                 | What It Detects                                                   | Weight |
+| ---------------------- | ----------------------------------------------------------------- | ------ |
+| **Speaking Rate**      | Increased pace = higher engagement                                | 15%    |
+| **Emotional Language** | Words like _secret, mistake, never, million_                      | 20%    |
+| **Sentiment Shift**    | Strong positive/negative swings                                   | 15%    |
+| **Story Structure**    | Patterns: _problem → conflict → lesson → surprise_                | 25%    |
+| **Engagement Hooks**   | Phrases like _"did you know", "here's why", "what happened next"_ | 25%    |
 
 Only the top-scoring chunks are sent to the AI for deeper analysis.
 
@@ -160,6 +161,7 @@ Only the top-scoring chunks are sent to the AI for deeper analysis.
 The LLM evaluates the top heuristic candidates and returns a ranked list.
 
 **Scoring criteria:**
+
 - Hook strength — does it grab attention immediately?
 - Virality potential — will people share this?
 - Curiosity — does it make you want to keep watching?
@@ -184,13 +186,14 @@ The LLM evaluates the top heuristic candidates and returns a ranked list.
 
 ## Clip Selection Rules
 
-| Rule | Value |
-|---|---|
-| Minimum length | 20 seconds |
-| Maximum length | 90 seconds |
-| Ideal range | 30–60 seconds |
+| Rule           | Value         |
+| -------------- | ------------- |
+| Minimum length | 20 seconds    |
+| Maximum length | 90 seconds    |
+| Ideal range    | 30–60 seconds |
 
 **Automatically rejected:**
+
 - Dead air or long silences
 - Repeated content
 - Incomplete stories
@@ -214,11 +217,11 @@ For every frame of a selected clip, Skate detects and tracks faces to generate a
 
 **Reframing rules (target: 1080×1920):**
 
-| Scenario | Crop Behavior |
-|---|---|
-| Single speaker | Keep face centered |
-| Two speakers | Dynamic split — follow active speaker |
-| No face detected | Center crop |
+| Scenario         | Crop Behavior                         |
+| ---------------- | ------------------------------------- |
+| Single speaker   | Keep face centered                    |
+| Two speakers     | Dynamic split — follow active speaker |
+| No face detected | Center crop                           |
 
 Movement is smoothed to avoid jarring camera jumps.
 
@@ -238,12 +241,12 @@ This is insane
 
 **Available styles** (V1 ships with Minimal):
 
-| Style | Description |
-|---|---|
-| Minimal | Clean, simple text |
-| TikTok | Bold, centered, high-contrast |
-| MrBeast | Animated, emphatic |
-| Podcast | Subtler, lower-third style |
+| Style   | Description                   |
+| ------- | ----------------------------- |
+| Minimal | Clean, simple text            |
+| TikTok  | Bold, centered, high-contrast |
+| MrBeast | Animated, emphatic            |
+| Podcast | Subtler, lower-third style    |
 
 ---
 
@@ -344,6 +347,7 @@ Config file lives at `~/.skate/config.json`.
 Skate caches intermediate results at `~/.skate/cache` so reruns are fast and work offline.
 
 Cached items:
+
 - Downloaded video/audio
 - Transcripts
 - Face tracking data
@@ -353,34 +357,34 @@ Cached items:
 
 ## Performance Targets (M4 Mac, 1-hour podcast)
 
-| Step | Target Time |
-|---|---|
-| Download | 1–3 min |
-| Transcribe | 2–5 min |
-| Analysis | < 30 sec |
-| Render | 3–5 min |
-| **Total** | **< 15 min** |
+| Step       | Target Time  |
+| ---------- | ------------ |
+| Download   | 1–3 min      |
+| Transcribe | 2–5 min      |
+| Analysis   | < 30 sec     |
+| Render     | 3–5 min      |
+| **Total**  | **< 15 min** |
 
 ---
 
 ## Testing Plan
 
-| Test Type | Coverage |
-|---|---|
-| Unit | Transcript parsing, chunking logic, scoring, ranking |
+| Test Type   | Coverage                                              |
+| ----------- | ----------------------------------------------------- |
+| Unit        | Transcript parsing, chunking logic, scoring, ranking  |
 | Integration | Full pipeline with YouTube input and local file input |
-| Regression | Known podcast dataset with expected clip scores |
+| Regression  | Known podcast dataset with expected clip scores       |
 
 ---
 
 ## Release Roadmap
 
-| Version | Features |
-|---|---|
-| **0.1** | Download, Whisper transcription, FFmpeg cuts |
-| **0.2** | AI ranking, metadata generation |
-| **0.3** | Face tracking, vertical exports |
-| **0.4** | TUI, watch mode |
+| Version | Features                                                             |
+| ------- | -------------------------------------------------------------------- |
+| **0.1** | Download, Whisper transcription, FFmpeg cuts                         |
+| **0.2** | AI ranking, metadata generation                                      |
+| **0.3** | Face tracking, vertical exports                                      |
+| **0.4** | TUI, watch mode                                                      |
 | **1.0** | Stable CLI, cross-platform support, Homebrew install, public release |
 
 **Planned for V2:** Speaker tracking, thumbnail generation, auto titles & hashtags, batch processing, watch folders.
