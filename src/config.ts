@@ -14,6 +14,7 @@ const DEFAULT_CONFIG: SkateConfig = {
   outputDir: join(process.cwd(), "output"),
   cacheDir: join(CONFIG_DIR, "cache"),
   ollamaUrl: "http://localhost:11434",
+  crop: true,
 };
 
 export function getDefaultConfig(): SkateConfig {
