@@ -15,11 +15,10 @@ export function generateASS(words: WordTimestamp[], _style: SubtitleStyle = "min
 ScriptType: v4.00+
 PlayResX: 1080
 PlayResY: 1920
-ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Helvetica,48,&H00000000,&H00000000,&H00000000,&H00FFFFFF,0,0,0,0,100,100,0,0,3,3,0,2,40,40,80,1
+Style: Default,Arial,36,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,2,20,20,60,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
