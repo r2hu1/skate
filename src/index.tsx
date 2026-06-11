@@ -6,6 +6,21 @@ import { doctorCommand } from "./commands/doctor";
 import { runPipeline } from "./core/pipeline";
 import { tui } from "./ui/tui";
 
+function parseFlags(args: string[]): { positional: string[]; crop: boolean } {
+  let crop = true;
+  const positional: string[] = [];
+  for (const arg of args) {
+    if (arg === "--crop=false" || arg === "--no-crop") {
+      crop = false;
+    } else if (arg.startsWith("--crop=")) {
+      crop = arg.split("=")[1] !== "false";
+    } else {
+      positional.push(arg);
+    }
+  }
+  return { positional, crop };
+}
+
 async function main() {
   const args = process.argv.slice(2);
 
@@ -15,43 +30,44 @@ async function main() {
   }
 
   const config = await loadConfig();
-  const command = args[0];
+  const { positional, crop } = parseFlags(args);
+  const command = positional[0];
 
   try {
     switch (command) {
       case "clip": {
-        const source = args[1];
+        const source = positional[1];
         if (!source) { console.error("Usage: skate clip <file>"); process.exit(1); }
         const file = Bun.file(source);
         if (!(await file.exists())) { console.error(`File not found: ${source}`); process.exit(1); }
         console.log(` Skate — Processing video file`);
         console.log(`   Source: ${source}\n`);
-        await runPipeline({ source, isUrl: false, config, outputDir: config.outputDir });
+        await runPipeline({ source, isUrl: false, config, outputDir: config.outputDir, crop });
         break;
       }
       case "youtube": {
-        const url = args[1];
+        const url = positional[1];
         if (!url || !url.startsWith("http")) { console.error("YouTube URL must start with http(s)://"); process.exit(1); }
         console.log(` Skate — Processing YouTube URL`);
         console.log(`   Source: ${url}\n`);
-        await runPipeline({ source: url, isUrl: true, config, outputDir: config.outputDir });
+        await runPipeline({ source: url, isUrl: true, config, outputDir: config.outputDir, crop });
         break;
       }
       case "analyze": {
-        const source = args[1];
+        const source = positional[1];
         if (!source) { console.error("Usage: skate analyze <file>"); process.exit(1); }
         const file = Bun.file(source);
         if (!(await file.exists())) { console.error(`File not found: ${source}`); process.exit(1); }
         console.log(` Skate — Analyzing ${source}\n`);
-        const result = await runPipeline({ source, isUrl: false, config, outputDir: config.outputDir, skipRender: true });
+        const result = await runPipeline({ source, isUrl: false, config, outputDir: config.outputDir, skipRender: true, crop });
         console.log(`\n Analysis complete. ${result.selected.length} clips would be rendered.`);
         break;
       }
       case "render":
-        await renderCommand(args.slice(1), config);
+        await renderCommand(positional.slice(1), config);
         break;
       case "watch":
-        await watchCommand(args.slice(1), config);
+        await watchCommand(positional.slice(1), config);
         break;
       case "doctor":
         await doctorCommand();
@@ -65,13 +81,13 @@ async function main() {
         if (command.startsWith("http")) {
           console.log(` Skate — Processing YouTube URL`);
           console.log(`   Source: ${command}\n`);
-          await runPipeline({ source: command, isUrl: true, config, outputDir: config.outputDir });
+          await runPipeline({ source: command, isUrl: true, config, outputDir: config.outputDir, crop });
         } else {
           const file = Bun.file(command);
           if (!(await file.exists())) { console.error(`File not found: ${command}`); process.exit(1); }
           console.log(` Skate — Processing video file`);
           console.log(`   Source: ${command}\n`);
-          await runPipeline({ source: command, isUrl: false, config, outputDir: config.outputDir });
+          await runPipeline({ source: command, isUrl: false, config, outputDir: config.outputDir, crop });
         }
     }
   } catch (err: any) {
