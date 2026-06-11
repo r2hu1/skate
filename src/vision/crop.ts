@@ -124,7 +124,8 @@ export function buildCropFilterString(
   if (cropFrames.length === 0) return null;
 
   const { width, height } = cropFrames[0];
-  const totalFrames = cropFrames.length;
+  const lastFrameNum = Math.round(cropFrames[cropFrames.length - 1].timestamp * sourceFps);
+  const totalFrames = lastFrameNum + 1;
 
   const keyframes = compressToKeyframes(cropFrames, sourceFps, 8);
 
@@ -192,7 +193,7 @@ export function getSourceDimensions(
     "-v", "error",
     "-select_streams", "v:0",
     "-show_entries", "stream=width,height",
-    "-of", "csv=p=1",
+    "-of", "csv=nk=1:p=1",
     videoPath,
   ], { stdio: ["ignore", "pipe", "pipe"] });
 
@@ -212,13 +213,13 @@ export function getSourceFps(videoPath: string): number {
     "-v", "error",
     "-select_streams", "v:0",
     "-show_entries", "stream=r_frame_rate",
-    "-of", "csv=p=1",
+    "-of", "csv=nk=1:p=1",
     videoPath,
   ], { stdio: ["ignore", "pipe", "pipe"] });
 
   if (proc.exitCode !== 0) return 30;
 
-  const rate = proc.stdout.toString().trim();
+  const rate = proc.stdout.toString().trim().split(",").pop() || "";
   const parts = rate.split("/");
   if (parts.length === 2) {
     const num = parseInt(parts[0], 10);
