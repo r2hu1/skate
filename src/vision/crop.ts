@@ -110,3 +110,98 @@ function smoothCropPath(
 
   return smoothed;
 }
+
+interface CropKeyframe {
+  frame: number;
+  x: number;
+  y: number;
+}
+
+export function buildCropFilterString(
+  cropFrames: CropFrame[],
+  sourceFps: number,
+): string | null {
+  if (cropFrames.length === 0) return null;
+
+  const { width, height } = cropFrames[0];
+  const totalFrames = cropFrames.length;
+
+  const keyframes = compressToKeyframes(cropFrames, sourceFps, 8);
+
+  if (keyframes.length <= 1) {
+    const kf = keyframes[0];
+    return `crop=${width}:${height}:${kf.x}:${kf.y}`;
+  }
+
+  const xExpr = buildBetweenExpr(keyframes, totalFrames, "x");
+  const yExpr = buildBetweenExpr(keyframes, totalFrames, "y");
+
+  return `crop=${width}:${height}:'${xExpr}':'${yExpr}'`;
+}
+
+function compressToKeyframes(
+  cropFrames: CropFrame[],
+  sourceFps: number,
+  threshold: number,
+): CropKeyframe[] {
+  if (cropFrames.length === 0) return [];
+
+  const keyframes: CropKeyframe[] = [];
+  keyframes.push({ frame: 0, x: cropFrames[0].x, y: cropFrames[0].y });
+
+  for (let i = 1; i < cropFrames.length; i++) {
+    const prev = keyframes[keyframes.length - 1];
+    const curr = cropFrames[i];
+    const dx = Math.abs(curr.x - prev.x);
+    const dy = Math.abs(curr.y - prev.y);
+
+    if (dx > threshold || dy > threshold) {
+      const frame = Math.round(curr.timestamp * sourceFps);
+      keyframes.push({ frame, x: curr.x, y: curr.y });
+    }
+  }
+
+  const last = keyframes[keyframes.length - 1];
+  const lastSrc = cropFrames[cropFrames.length - 1];
+  const lastFrame = Math.round(lastSrc.timestamp * sourceFps);
+  if (last.frame !== lastFrame) {
+    keyframes.push({ frame: lastFrame, x: lastSrc.x, y: lastSrc.y });
+  }
+
+  return keyframes;
+}
+
+function buildBetweenExpr(keyframes: CropKeyframe[], totalFrames: number, field: "x" | "y"): string {
+  const terms: string[] = [];
+
+  for (let i = 0; i < keyframes.length; i++) {
+    const start = keyframes[i].frame;
+    const end = i < keyframes.length - 1 ? keyframes[i + 1].frame - 1 : totalFrames - 1;
+    if (start > end) continue;
+    terms.push(`between(n,${start},${end})*${keyframes[i][field]}`);
+  }
+
+  return terms.join("+");
+}
+
+export function getSourceDimensions(
+  videoPath: string,
+): { width: number; height: number } {
+  const proc = Bun.spawnSync([
+    "ffprobe",
+    "-v", "error",
+    "-select_streams", "v:0",
+    "-show_entries", "stream=width,height",
+    "-of", "csv=p=1",
+    videoPath,
+  ], { stdio: ["ignore", "pipe", "pipe"] });
+
+  if (proc.exitCode !== 0) {
+    return { width: 1920, height: 1080 };
+  }
+
+  const parts = proc.stdout.toString().trim().split(",");
+  const width = parseInt(parts[0], 10) || 1920;
+  const height = parseInt(parts[1], 10) || 1080;
+  return { width, height };
+}
