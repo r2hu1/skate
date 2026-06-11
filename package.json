@@ -1,10 +1,10 @@
 {
   "name": "skate",
-  "module": "src/index.ts",
+  "module": "src/index.tsx",
   "type": "module",
   "private": true,
   "bin": {
-    "skate": "./src/index.ts"
+    "skate": "./src/index.tsx"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -14,13 +14,14 @@
     "typescript": "^5"
   },
   "scripts": {
-    "start": "bun run src/index.ts",
-    "dev": "bun --watch run src/index.ts",
+    "start": "bun run src/index.tsx",
+    "dev": "bun --watch run src/index.tsx",
     "typecheck": "tsc --noEmit",
     "setup-python": "mkdir -p ~/.skate && python3 -m venv ~/.skate/venv && ~/.skate/venv/bin/pip3 install -r scripts/requirements.txt"
   },
   "dependencies": {
     "ink": "^5.2.0",
+    "ora": "^9.4.0",
     "react": "^19.1.0"
   }
 }
