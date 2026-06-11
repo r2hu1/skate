@@ -1,7 +1,7 @@
 import { join } from "path";
 import { existsSync } from "fs";
 import type { ScoredChunk, CropFrame, SubtitleStyle } from "../types";
-import { generateSRT } from "./subtitles";
+import { generateSRT, generateASS } from "./subtitles";
 
 const FFMPEG_PATHS = [
   "/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg",
@@ -34,12 +34,13 @@ export async function renderClips(
 
     const clipPath = join(outputDir, "clips", `clip-${clipNum}.mp4`);
     const srtPath = join(outputDir, "captions", `clip-${clipNum}.srt`);
+    const assPath = srtPath.replace(/\.srt$/, ".ass");
 
     const chunkStart = chunk.chunk.start;
-    const srt = generateSRT(chunk.chunk.words, subtitleStyle, chunkStart);
-    await Bun.write(srtPath, srt);
+    await Bun.write(srtPath, generateSRT(chunk.chunk.words, subtitleStyle, chunkStart));
+    await Bun.write(assPath, generateASS(chunk.chunk.words, subtitleStyle, chunkStart));
 
-    await cutClip(sourceFile, clipPath, chunk.chunk.start, chunk.chunk.end, srtPath, subtitleStyle);
+    await cutClip(sourceFile, clipPath, chunk.chunk.start, chunk.chunk.end, assPath, subtitleStyle);
   }
 }
 
