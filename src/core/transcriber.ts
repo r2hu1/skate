@@ -2,9 +2,18 @@ import { join } from "path";
 import { homedir } from "os";
 import type { Transcript, TranscriptSegment, WordTimestamp } from "../types";
 
-const WHISPER_SCRIPT = join(homedir(), ".skate", "whisper_transcribe.py");
+const SCRIPTS_DIR = join(import.meta.dir, "..", "..", "scripts");
+const HOME_SCRIPT = join(homedir(), ".skate", "whisper_transcribe.py");
 const VENV_PYTHON = join(homedir(), ".skate", "venv", "bin", "python3");
 const SYSTEM_PYTHON = "python3";
+
+function findWhisperScript(): string {
+  const repoScript = Bun.file(join(SCRIPTS_DIR, "whisper_transcribe.py"));
+  if (repoScript.size > 0) return join(SCRIPTS_DIR, "whisper_transcribe.py");
+  const homeScript = Bun.file(HOME_SCRIPT);
+  if (homeScript.size > 0) return HOME_SCRIPT;
+  return join(SCRIPTS_DIR, "whisper_transcribe.py");
+}
 
 export async function transcribeAudio(audioPath: string, cacheDir: string, modelSize = "base"): Promise<Transcript> {
   console.log("  Transcribing audio...");
@@ -17,10 +26,11 @@ export async function transcribeAudio(audioPath: string, cacheDir: string, model
   }
 
   const python = await findPython();
+  const script = findWhisperScript();
 
   const proc = Bun.spawnSync([
     python,
-    WHISPER_SCRIPT,
+    script,
     audioPath,
     modelSize,
   ], {
