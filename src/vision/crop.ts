@@ -193,7 +193,7 @@ export function getSourceDimensions(
     "-v", "error",
     "-select_streams", "v:0",
     "-show_entries", "stream=width,height",
-    "-of", "csv=nk=1:p=1",
+    "-of", "default=noprint_wrappers=1:nokey=1",
     videoPath,
   ], { stdio: ["ignore", "pipe", "pipe"] });
 
@@ -201,9 +201,9 @@ export function getSourceDimensions(
     return { width: 1920, height: 1080 };
   }
 
-  const parts = proc.stdout.toString().trim().split(",");
-  const width = parseInt(parts[0], 10) || 1920;
-  const height = parseInt(parts[1], 10) || 1080;
+  const lines = proc.stdout.toString().trim().split("\n");
+  const width = parseInt(lines[0], 10) || 1920;
+  const height = parseInt(lines[1], 10) || 1080;
   return { width, height };
 }
 
@@ -213,13 +213,13 @@ export function getSourceFps(videoPath: string): number {
     "-v", "error",
     "-select_streams", "v:0",
     "-show_entries", "stream=r_frame_rate",
-    "-of", "csv=nk=1:p=1",
+    "-of", "default=noprint_wrappers=1:nokey=1",
     videoPath,
   ], { stdio: ["ignore", "pipe", "pipe"] });
 
   if (proc.exitCode !== 0) return 30;
 
-  const rate = proc.stdout.toString().trim().split(",").pop() || "";
+  const rate = proc.stdout.toString().trim();
   const parts = rate.split("/");
   if (parts.length === 2) {
     const num = parseInt(parts[0], 10);
