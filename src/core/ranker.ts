@@ -8,7 +8,7 @@ export async function rankChunks(
   model: string,
 ): Promise<RankingResult[]> {
   const sorted = [...scoredChunks].sort((a, b) => b.heuristic.total - a.heuristic.total);
-  const candidates = sorted.slice(0, Math.min(topN * 2, sorted.length));
+  const candidates = sorted.slice(0, Math.min(topN + 2, sorted.length));
 
   console.log(`  Sending ${candidates.length} top chunks to AI for ranking...`);
 
