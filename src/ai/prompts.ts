@@ -16,7 +16,7 @@ export function buildRankingPrompt(chunks: Array<{ index: number; start: number;
 Each object must have: title (string), score (number 0-10), start (number), end (number), reason (string).
 
 Segments:
-${chunks.map(c => `[${c.index}] ${c.start}s-${c.end}s: "${c.text}"`).join("\n")}
+${chunks.map(c => `[${c.index}] ${c.start}s-${c.end}s: "${c.text.slice(0, 200)}"`).join("\n")}
 
 Return ONLY the JSON array.`;
 }
