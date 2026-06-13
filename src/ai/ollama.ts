@@ -28,19 +28,24 @@ export async function queryOllama(
     throw new Error(`Ollama API error: ${res.status} ${res.statusText}`);
   }
 
-  const data = await res.json() as any;
+  const data = (await res.json()) as any;
   const response = data.response || "";
   if (!response) {
-    console.warn(`  Ollama response empty. done=${data.done} error=${data.error || "none"}`);
+    console.warn(
+      `  Ollama response empty. done=${data.done} error=${data.error || "none"}`,
+    );
   }
   return response;
 }
 
-export async function checkOllamaModel(ollamaUrl: string, model: string): Promise<boolean> {
+export async function checkOllamaModel(
+  ollamaUrl: string,
+  model: string,
+): Promise<boolean> {
   try {
     const res = await fetch(`${ollamaUrl}/api/tags`);
     if (!res.ok) return false;
-    const data = await res.json() as any;
+    const data = (await res.json()) as any;
     const models = (data.models || []).map((m: any) => m.name);
     return models.some((m: string) => m.startsWith(model) || m === model);
   } catch {
