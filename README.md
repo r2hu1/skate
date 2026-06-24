@@ -214,7 +214,7 @@ skate/
 │   │   └── tui.ts               # Terminal spinner UI
 │   ├── config.ts                # Configuration loader
 │   ├── types.ts                 # TypeScript types
-│   └── index.tsx                # CLI entry point
+│   └── index.ts                 # CLI entry point
 ├── output/                      # Rendered clips
 ├── temp/                        # Working files
 ├── package.json
