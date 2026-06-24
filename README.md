@@ -1,25 +1,8 @@
-# Skate — AI-Powered YouTube → Viral Shorts (clipper) CLI
+# Skate — AI-Powered YouTube → Viral Shorts CLI
 
 > Turn long-form videos into viral-ready vertical shorts, entirely on your local machine. Free, no API keys, no cloud.
 
 Saw a bunch of paid tools doing this — why pay when you can run it locally? Skate uses **faster-whisper** for transcription, **Ollama** for AI ranking, **OpenCV** for face tracking, and **FFmpeg** for rendering. Everything runs on your machine.
-
----
-
-## How It Works
-
-```
-Input (URL or file)
-  → Download (yt-dlp)
-  → Transcribe (faster-whisper)
-  → Chunk transcript into segments
-  → Score heuristically (no AI needed)
-  → Rank with local LLM (Ollama)
-  → Select best clips
-  → Track faces for smart vertical crop
-  → Render clips with subtitles burned in
-  → Output organized shorts
-```
 
 ---
 
@@ -45,93 +28,52 @@ ollama pull llama3.2:3b
 
 ## Installation
 
-### 1. Clone and install dependencies
+### via npm (recommended)
 
 ```bash
-git clone https://github.com/yourusername/skate.git
-cd skate
-bun install
+npm install -g skate-shorts
+bun run setup-python
 ```
 
-### 2. Set up Python environment (Whisper + OpenCV)
+### from source
+
+```bash
+git clone https://github.com/r2hu1/skate.git
+cd skate
+bun install
+bun run setup-python
+bun link
+```
+
+### Python environment
 
 ```bash
 bun run setup-python
 ```
 
-This creates a virtual environment at `~/.skate/venv` and installs:
-
-- `faster-whisper` — speech-to-text with word-level timestamps
-- `opencv-contrib-python` — face detection via Haar cascades
-- `numpy` — numerical processing
-
-### 3. Link the CLI (optional)
-
-```bash
-bun link
-```
-
-Then you can run `skate` from anywhere.
+This creates a virtual environment at `~/.skate/venv` and installs `faster-whisper`, `opencv-contrib-python`, and `numpy`.
 
 ---
 
 ## CLI Usage
 
-### Process a local video
-
 ```bash
-bun start -- clip video.mp4
+skate https://youtube.com/watch?v=abc123    # download + process
+skate clip video.mp4                         # local file
+skate analyze video.mp4                      # analyze only (skip render)
+skate render video.mp4                       # render from cached analysis
+skate watch ./videos                         # watch directory for new files
+skate doctor                                 # check dependencies
 ```
 
-### Process a YouTube video
+### Options
 
-```bash
-bun start -- youtube https://youtube.com/watch?v=abc123
-```
+| Flag          | Description                            |
+| ------------- | -------------------------------------- |
+| `--no-crop`   | Disable face tracking, use center crop |
+| `--crop=true` | Enable face tracking (default)         |
 
-### Auto-detect URL or file
-
-```bash
-bun start -- https://youtube.com/watch?v=abc123
-bun start -- video.mp4
-```
-
-### Analyze only (skip rendering)
-
-```bash
-bun start -- analyze video.mp4
-```
-
-### Render from cached analysis
-
-```bash
-bun start -- render video.mp4
-```
-
-### Watch a directory for new files
-
-```bash
-bun start -- watch ./videos
-```
-
-### Disable face tracking
-
-```bash
-bun start -- clip video.mp4 --no-crop
-bun start -- youtube https://youtube.com/watch?v=abc123 --no-crop
-```
-
-By default, Skate tracks faces for smart vertical framing. Pass `--no-crop` to use a static center crop instead.
-
-### Check dependencies
-
-```bash
-bun start -- doctor
-```
-
----
-
-## Configuration
+### Configuration
 
 Config is stored at `~/.skate/config.json` and auto-created on first run.
 
@@ -144,11 +86,10 @@ Config is stored at `~/.skate/config.json` and auto-created on first run.
   "subtitleStyle": "minimal",
   "outputDir": "./output",
   "cacheDir": "~/.skate/cache",
-  "ollamaUrl": "http://localhost:11434"
+  "ollamaUrl": "http://localhost:11434",
+  "crop": true
 }
 ```
-
-### Options
 
 | Field           | Default                  | Description                                     |
 | --------------- | ------------------------ | ----------------------------------------------- |
@@ -160,6 +101,38 @@ Config is stored at `~/.skate/config.json` and auto-created on first run.
 | `outputDir`     | `./output`               | Output directory                                |
 | `cacheDir`      | `~/.skate/cache`         | Cache directory                                 |
 | `ollamaUrl`     | `http://localhost:11434` | Ollama API URL                                  |
+| `crop`          | `true`                   | Enable face tracking for smart vertical crop    |
+
+---
+
+## How It Works
+
+```
+Input (URL or file)
+  → Download (yt-dlp)
+  → Transcribe (faster-whisper)
+  → Chunk transcript into segments
+  → Score heuristically (speaking rate, emotion, story, hooks)
+  → Auto-start Ollama if not running
+  → Rank with local LLM (hook strength, momentum, value)
+  → Select best clips (no overlap)
+  → Track faces for smart vertical crop
+  → Render clips with subtitles burned in
+  → Output organized shorts + captions
+```
+
+### Pipeline Steps
+
+| Step            | Description                                                        |
+| --------------- | ------------------------------------------------------------------ |
+| **Download**    | Pulls video from YouTube via yt-dlp or uses local file             |
+| **Transcribe**  | Runs faster-whisper for speech-to-text with word-level timestamps  |
+| **Chunk**       | Splits transcript into 20-90 second natural segments               |
+| **Score**       | Heuristic scoring — speaking rate, emotion, story structure, hooks |
+| **Rank**        | Sends top candidates to Ollama for virality scoring (auto-starts)  |
+| **Select**      | Picks best clips based on combined heuristic + AI scores           |
+| **Track Faces** | Detects faces per frame via OpenCV for smart vertical crop         |
+| **Render**      | Cuts clips, applies crop, burns in subtitles                       |
 
 ---
 
@@ -180,76 +153,12 @@ output/
 
 ---
 
-## Project Structure
-
-```
-skate/
-├── scripts/
-│   ├── face_detect.py         # OpenCV face detection
-│   ├── whisper_transcribe.py  # faster-whisper transcription
-│   └── requirements.txt       # Python dependencies
-├── src/
-│   ├── commands/
-│   │   ├── clip.ts            # Process local video
-│   │   ├── analyze.ts         # Analysis only pipeline
-│   │   ├── render.ts          # Render from cached analysis
-│   │   ├── watch.ts           # Watch directory mode
-│   │   └── doctor.ts          # Dependency checker
-│   ├── core/
-│   │   ├── pipeline.ts        # Main pipeline orchestrator
-│   │   ├── downloader.ts      # yt-dlp integration
-│   │   ├── transcriber.ts     # Whisper bridge
-│   │   ├── chunker.ts         # Transcript chunking
-│   │   ├── scorer.ts          # Heuristic scoring
-│   │   ├── ranker.ts          # AI ranking bridge
-│   │   ├── tracker.ts         # Face tracking
-│   │   ├── renderer.ts        # FFmpeg rendering
-│   │   └── subtitles.ts       # SRT/ASS generation
-│   ├── ai/
-│   │   ├── prompts.ts         # LLM prompt templates
-│   │   ├── ollama.ts          # Ollama API client
-│   │   └── ranking.ts         # AI ranking logic
-│   ├── vision/
-│   │   ├── face.ts            # Face detection
-│   │   ├── scene.ts           # Scene detection
-│   │   └── crop.ts            # Smart crop path
-│   ├── ui/
-│   │   └── tui.ts             # Terminal spinner UI
-│   ├── config.ts              # Configuration loader
-│   ├── types.ts               # TypeScript types
-│   └── index.tsx              # CLI entry point
-├── output/                    # Rendered clips
-├── cache/                     # Cached downloads
-├── models/                    # Local models
-├── temp/                      # Working files
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
----
-
-## Pipeline Steps
-
-| Step            | Description                                                        |
-| --------------- | ------------------------------------------------------------------ |
-| **Download**    | Pulls video from YouTube via yt-dlp (or uses local file)           |
-| **Transcribe**  | Runs faster-whisper for speech-to-text with word-level timestamps  |
-| **Chunk**       | Splits transcript into 30–90 second natural segments               |
-| **Score**       | Heuristic scoring — speaking rate, emotion, story structure, hooks |
-| **Rank**        | Sends top candidates to Ollama for virality scoring                |
-| **Select**      | Picks best clips based on combined heuristic + AI scores           |
-| **Track Faces** | Detects faces per frame via OpenCV for smart vertical crop         |
-| **Render**      | Cuts clips, applies crop, burns in subtitles                       |
-
----
-
 ## npm Scripts
 
 | Script                 | Command                                       |
 | ---------------------- | --------------------------------------------- |
-| `bun start`            | Run Skate                                     |
-| `bun run dev`          | Run with watch mode (auto-restart on changes) |
+| `skate`                | Run Skate                                     |
+| `bun run dev`          | Run with watch mode                           |
 | `bun run typecheck`    | TypeScript type checking                      |
 | `bun run setup-python` | Create venv and install Python deps           |
 
@@ -268,9 +177,56 @@ Re-running is fast — only changed steps are re-executed.
 
 ---
 
+## Project Structure
+
+```
+skate/
+├── scripts/
+│   ├── face_detect.py           # OpenCV face detection
+│   ├── whisper_transcribe.py    # faster-whisper transcription
+│   └── requirements.txt         # Python dependencies
+├── src/
+│   ├── commands/
+│   │   ├── clip.ts              # Process local video
+│   │   ├── analyze.ts           # Analysis only pipeline
+│   │   ├── render.ts            # Render from cached analysis
+│   │   ├── watch.ts             # Watch directory mode
+│   │   └── doctor.ts            # Dependency checker
+│   ├── core/
+│   │   ├── pipeline.ts          # Main pipeline orchestrator
+│   │   ├── downloader.ts        # yt-dlp integration
+│   │   ├── transcriber.ts       # Whisper bridge
+│   │   ├── chunker.ts           # Transcript chunking
+│   │   ├── scorer.ts            # Heuristic scoring
+│   │   ├── ranker.ts            # AI ranking bridge
+│   │   ├── tracker.ts           # Face tracking
+│   │   ├── renderer.ts          # FFmpeg rendering
+│   │   └── subtitles.ts         # SRT/ASS generation
+│   ├── ai/
+│   │   ├── prompts.ts           # LLM prompt templates
+│   │   ├── ollama.ts            # Ollama API client
+│   │   └── ranking.ts           # AI ranking logic
+│   ├── vision/
+│   │   ├── face.ts              # Face detection
+│   │   ├── scene.ts             # Scene detection
+│   │   └── crop.ts              # Smart crop path
+│   ├── ui/
+│   │   └── tui.ts               # Terminal spinner UI
+│   ├── config.ts                # Configuration loader
+│   ├── types.ts                 # TypeScript types
+│   └── index.tsx                # CLI entry point
+├── output/                      # Rendered clips
+├── temp/                        # Working files
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+---
+
 ## Why Build This?
 
-Every "AI shorts" tool out there charges $20–$50/month or requires API keys that bill per minute. Skate is:
+Every "AI shorts" tool out there charges $20-50/month or requires API keys that bill per minute. Skate is:
 
 - **100% local** — nothing leaves your machine
 - **Free** — no subscriptions, no API costs
