@@ -5,14 +5,20 @@ import ora from "ora";
 
 const VENV_DIR = join(homedir(), ".skate", "venv");
 const VENV_PYTHON = join(VENV_DIR, "bin", "python3");
-const REQUIREMENTS = join(import.meta.dir, "..", "..", "scripts", "requirements.txt");
+const REQUIREMENTS = join(
+  import.meta.dir,
+  "..",
+  "..",
+  "scripts",
+  "requirements.txt",
+);
 
 export async function checkPythonVenv(): Promise<boolean> {
   return existsSync(VENV_PYTHON);
 }
 
 export async function setupCommand(): Promise<void> {
-  console.log("  Setting up Python environment\n");
+  console.log("Setting up Python environment\n");
 
   const skateDir = join(homedir(), ".skate");
   if (!existsSync(skateDir)) {
@@ -36,10 +42,13 @@ export async function setupCommand(): Promise<void> {
   create.succeed("Virtual environment created");
 
   const install = ora("Installing faster-whisper, opencv, numpy...").start();
-  const pipProc = Bun.spawnSync([VENV_PYTHON, "-m", "pip", "install", "-r", REQUIREMENTS], {
-    stdio: ["ignore", "pipe", "pipe"],
-    timeout: 600000,
-  });
+  const pipProc = Bun.spawnSync(
+    [VENV_PYTHON, "-m", "pip", "install", "-r", REQUIREMENTS],
+    {
+      stdio: ["ignore", "pipe", "pipe"],
+      timeout: 600000,
+    },
+  );
   if (pipProc.exitCode !== 0) {
     install.fail("Installation failed");
     throw new Error(pipProc.stderr.toString());
