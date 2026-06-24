@@ -31,7 +31,7 @@ export async function renderCommand(args: string[], config: SkateConfig): Promis
   console.log(`  Rendering ${analysis.selected.length} clips from cached analysis...`);
   console.log(`  Source: ${analysis.sourceFile}`);
 
-  const outputDir = join(process.cwd(), "output", videoName);
+  const outputDir = join(config.outputDir, videoName);
   await renderClips(analysis.sourceFile, analysis.selected, config.subtitleStyle, outputDir);
 
   const metadata = analysis.selected.map((s, i) => ({
