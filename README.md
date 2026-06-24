@@ -4,6 +4,8 @@
 
 Saw a bunch of paid tools doing this — why pay when you can run it locally? Skate uses **faster-whisper** for transcription, **Ollama** for AI ranking, **OpenCV** for face tracking, and **FFmpeg** for rendering. Everything runs on your machine.
 
+![Preview](images/preview.png)
+
 ---
 
 ## Requirements
