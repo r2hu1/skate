@@ -24,7 +24,7 @@ export async function rankWithAI(
 
   const results = parseRankingResponse(response, chunks);
   if (results.length === 0) {
-    console.warn("AI returned empty results, falling back to heuristic");
+    console.warn("  AI returned empty or unparseable results, falling back to heuristic");
     return chunks.map((c, i) => ({
       title:
         c.chunk.text.slice(0, 80) + (c.chunk.text.length > 80 ? "..." : ""),

@@ -2,6 +2,7 @@ import { join } from "path";
 import { existsSync, mkdirSync } from "fs";
 import type { AnalysisResult, PipelineOptions, ScoredChunk } from "../types";
 import { getCacheDir } from "../config";
+import { ensureOllama } from "../ai/ollama";
 import { downloadVideo, extractAudio } from "./downloader";
 import { transcribeAudio } from "./transcriber";
 import { chunkTranscript } from "./chunker";
@@ -54,6 +55,10 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
   }));
 
   tui.startStep("AI Rank");
+  const ollamaReady = await ensureOllama(config.ollamaUrl);
+  if (!ollamaReady) {
+    tui.log("Ollama unavailable — skipping AI ranking, using heuristics only");
+  }
   const ranked = await rankChunks(scored, config.clips, config.ollamaUrl, config.model);
   tui.setRankings(ranked);
 

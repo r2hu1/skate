@@ -17,7 +17,8 @@ export async function rankChunks(
     const results = await rankWithAI(candidates, ollamaUrl, model);
     return results;
   } catch (err) {
-    tui.log(`AI ranking failed, using heuristics`);
+    tui.log(`AI ranking failed: ${err instanceof Error ? err.message : String(err)}`);
+    tui.log(`Falling back to heuristic scores`);
 
     return candidates.map((c, i) => ({
       title: c.chunk.text.slice(0, 80) + (c.chunk.text.length > 80 ? "..." : ""),
