@@ -1,6 +1,7 @@
 import { homedir } from "os";
 import { join } from "path";
 import { existsSync } from "fs";
+import ora from "ora";
 
 const VENV_DIR = join(homedir(), ".skate", "venv");
 const VENV_PYTHON = join(VENV_DIR, "bin", "python3");
@@ -11,7 +12,7 @@ export async function checkPythonVenv(): Promise<boolean> {
 }
 
 export async function setupCommand(): Promise<void> {
-  console.log(" Setting up Python environment...\n");
+  console.log("  Setting up Python environment\n");
 
   const skateDir = join(homedir(), ".skate");
   if (!existsSync(skateDir)) {
@@ -19,27 +20,31 @@ export async function setupCommand(): Promise<void> {
   }
 
   if (existsSync(VENV_DIR)) {
-    console.log("  Removing existing venv...");
+    const clean = ora("Removing old venv...").start();
     Bun.spawnSync(["rm", "-rf", VENV_DIR]);
+    clean.succeed("Removed old venv");
   }
 
-  console.log("  Creating Python virtual environment...");
+  const create = ora("Creating Python virtual environment...").start();
   const createProc = Bun.spawnSync(["python3", "-m", "venv", VENV_DIR], {
     stdio: ["ignore", "pipe", "pipe"],
   });
   if (createProc.exitCode !== 0) {
-    throw new Error(`Failed to create venv: ${createProc.stderr.toString()}`);
+    create.fail("Failed to create venv");
+    throw new Error(createProc.stderr.toString());
   }
-  console.log("  Venv created");
+  create.succeed("Virtual environment created");
 
-  console.log("  Installing dependencies (faster-whisper, opencv, numpy)...");
+  const install = ora("Installing faster-whisper, opencv, numpy...").start();
   const pipProc = Bun.spawnSync([VENV_PYTHON, "-m", "pip", "install", "-r", REQUIREMENTS], {
-    stdio: ["inherit", "pipe", "pipe"],
+    stdio: ["ignore", "pipe", "pipe"],
     timeout: 600000,
   });
   if (pipProc.exitCode !== 0) {
-    throw new Error(`pip install failed: ${pipProc.stderr.toString()}`);
+    install.fail("Installation failed");
+    throw new Error(pipProc.stderr.toString());
   }
+  install.succeed("Dependencies installed");
 
-  console.log("\n Python environment ready at ~/.skate/venv");
+  console.log("\n  Python environment ready at ~/.skate/venv\n");
 }
