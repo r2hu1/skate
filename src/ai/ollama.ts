@@ -1,3 +1,5 @@
+import { tui } from "../ui/tui";
+
 export async function queryOllama(
   prompt: string,
   ollamaUrl: string,
@@ -69,13 +71,12 @@ export async function startOllama(): Promise<boolean> {
 
 export async function ensureOllama(ollamaUrl: string): Promise<boolean> {
   if (await checkOllamaRunning(ollamaUrl)) return true;
-  console.log("  Ollama is not running. Attempting to start it...");
+  tui.log("Ollama not running — starting...");
   const started = await startOllama();
   if (started) {
-    console.log("  Ollama started successfully");
+    tui.raw("Ollama ready");
   } else {
-    console.log("  Could not start Ollama automatically");
-    console.log("  Start it manually: ollama serve");
+    tui.warn("Could not start Ollama automatically, start it manually: ollama serve");
   }
   return started;
 }
