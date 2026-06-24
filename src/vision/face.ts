@@ -1,6 +1,7 @@
 import { join } from "path";
 import { homedir } from "os";
 import type { FaceTrackPoint } from "../types";
+import { tui } from "../ui/tui";
 
 const SCRIPTS_DIR = join(import.meta.dir, "..", "..", "scripts");
 const HOME_SCRIPT = join(homedir(), ".skate", "face_detect.py");
@@ -19,7 +20,7 @@ export async function detectFaces(
   videoPath: string,
   timestamps: number[],
 ): Promise<Map<number, FaceTrackPoint[]>> {
-  console.log("  Detecting faces...");
+  tui.log("Detecting faces...");
 
   const python = await findPython();
   const script = findScript();
@@ -33,7 +34,7 @@ export async function detectFaces(
   if (proc.exitCode !== 0) {
     const stderr = proc.stderr.toString();
     const stdout = proc.stdout.toString();
-    console.warn(`  Face detection failed: ${stderr || stdout}`);
+    tui.warn(`Face detection failed: ${stderr || stdout}`);
     return new Map();
   }
 
@@ -42,13 +43,13 @@ export async function detectFaces(
   try {
     raw = JSON.parse(stdout);
   } catch {
-    console.warn("  Face detection: invalid JSON output");
+    tui.warn("Face detection: invalid JSON output");
     return new Map();
   }
 
   if (!Array.isArray(raw)) {
     const errMsg = raw?.error || "unexpected response format";
-    console.warn(`  Face detection error: ${errMsg}`);
+    tui.warn(`Face detection error: ${errMsg}`);
     return new Map();
   }
 
@@ -72,11 +73,11 @@ export async function detectFaces(
   }
 
   if (faceMap.size === 0) {
-    console.log("  No faces detected, will use center crop");
+    tui.raw("No faces detected, will use center crop");
     return faceMap;
   }
 
-  console.log(`  Detected faces at ${faceMap.size} timestamps`);
+  tui.raw(`Detected faces at ${faceMap.size} timestamps`);
   return faceMap;
 }
 
@@ -85,7 +86,7 @@ export function trackFaces(
   start: number,
   end: number,
 ): Promise<FaceTrackPoint[]> {
-  console.log("  Tracking faces across frames...");
+  tui.log("Tracking faces across frames...");
   return Promise.resolve([]);
 }
 
