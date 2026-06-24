@@ -1,5 +1,5 @@
 import { homedir } from "os";
-import { join } from "path";
+import { join, resolve } from "path";
 import { existsSync } from "fs";
 import { createInterface } from "readline";
 import ora from "ora";
@@ -39,7 +39,11 @@ export async function setupCommand(): Promise<void> {
   const config = await loadConfig();
   const defaultDir = config.projectDir;
   const answer = await ask(`Project directory [${defaultDir}]: `);
-  const projectDir = answer || defaultDir;
+  let projectDir = answer || defaultDir;
+  if (projectDir.startsWith("~")) {
+    projectDir = homedir() + projectDir.slice(1);
+  }
+  projectDir = resolve(projectDir);
 
   const updatedConfig: SkateConfig = {
     ...config,
