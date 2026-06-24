@@ -51,7 +51,7 @@ bun link
 skate setup
 ```
 
-This creates a virtual environment at `~/.skate/venv` and installs `faster-whisper`, `opencv-contrib-python`, and `numpy`. The pipeline will auto-detect if the venv is missing and prompt you to run setup.
+This prompts for a project directory, creates a virtual environment at `~/.skate/venv`, and installs `faster-whisper`, `opencv-contrib-python`, and `numpy`. Output and temp dirs are set to `<projectDir>/skate/output` and `<projectDir>/skate/temp`.
 
 ---
 
@@ -144,7 +144,7 @@ Input (URL or file)
 ## Output Structure
 
 ```
-output/
+<projectDir>/skate/output/
 └── <video-name>/
     ├── clips/
     │   ├── clip-01.mp4
@@ -220,8 +220,8 @@ skate/
 │   ├── config.ts                # Configuration loader
 │   ├── types.ts                 # TypeScript types
 │   └── index.ts                 # CLI entry point
-├── output/                      # Rendered clips
-├── temp/                        # Working files
+├── skate/output/                # Rendered clips
+├── skate/temp/                  # Working files
 ├── package.json
 ├── tsconfig.json
 └── README.md
