@@ -9,7 +9,7 @@ export async function rankChunks(
   model: string,
 ): Promise<RankingResult[]> {
   const sorted = [...scoredChunks].sort((a, b) => b.heuristic.total - a.heuristic.total);
-  const candidates = sorted.slice(0, Math.min(topN + 2, sorted.length));
+  const candidates = sorted.slice(0, Math.min(topN * 2 + 3, sorted.length));
 
   tui.log(`Sending ${candidates.length} top chunks to AI...`);
 
@@ -49,9 +49,23 @@ export function selectClips(
 
     if (overlapsAny(rank.start, rank.end, usedRanges)) continue;
 
-    const chunk = scoredChunks.find(
-      c => Math.abs(c.chunk.start - rank.start) < 1 && Math.abs(c.chunk.end - rank.end) < 1
-    );
+    let chunk: ScoredChunk | undefined;
+
+    if (rank.index !== undefined && rank.index >= 0) {
+      chunk = scoredChunks.find(c => c.index === rank.index);
+    }
+
+    if (!chunk) {
+      chunk = scoredChunks.find(
+        c => Math.abs(c.chunk.start - rank.start) < 2 && Math.abs(c.chunk.end - rank.end) < 2
+      );
+    }
+
+    if (!chunk) {
+      chunk = scoredChunks.find(
+        c => Math.abs(c.chunk.start - rank.start) < 5
+      );
+    }
 
     if (chunk) {
       chunk.aiScore = rank.score;
