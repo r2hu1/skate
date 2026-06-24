@@ -6,6 +6,7 @@ import { doctorCommand } from "./commands/doctor";
 import { setupCommand } from "./commands/setup";
 import { runPipeline } from "./core/pipeline";
 import { tui } from "./ui/tui";
+import pkg from "../package.json";
 
 function parseFlags(args: string[]): { positional: string[]; crop: boolean } {
   let crop = true;
@@ -117,6 +118,10 @@ async function main() {
       case "-h":
         showHelp();
         break;
+      case "--version":
+      case "-v":
+        console.log(pkg.version);
+        process.exit(0);
       default:
         if (command.startsWith("http")) {
           console.log(`Processing YouTube URL`);
@@ -166,8 +171,10 @@ Usage:
   skate doctor                 Check system dependencies
 
 Options:
-  --help, -h  Show this help message
-  --version   Show version
+  --help, -h       Show this help message
+  --version, -v    Show version
+  --no-crop        Disable face tracking, use center crop
+  --crop=true      Enable face tracking (default)
 `);
 }
 
