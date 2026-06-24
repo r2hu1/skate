@@ -123,9 +123,31 @@ function scoreEngagementHooks(text: string): number {
 
   for (const phrase of ENGAGEMENT_PHRASES) {
     if (lower.includes(phrase)) {
-      score += 20;
+      score += 15;
     }
   }
+
+  const sentences = text.split(/[.!?\n]+/).filter(s => s.trim().length > 0);
+  const questions = sentences.filter(s => s.trim().endsWith("?"));
+  score += Math.min(questions.length * 15, 25);
+
+  const hasDigits = /\d+/.test(text);
+  if (hasDigits) score += 10;
+
+  const boldStarts = /\b(this is|the |a |here.s why|what if|how to|why |the truth|the problem|the secret|the real|the best|the worst|the one|nobody|everyone|someone)\b/i;
+  if (boldStarts.test(text)) score += 10;
+
+  const commands = /\b(watch|look|listen|imagine|picture this|think about|consider|remember|don.t |never |always )\b/i;
+  if (commands.test(text)) score += 10;
+
+  const timePressure = /\b(now|today|right now|this year|this decade|this moment|finally|yet|already|still|just)\b/i;
+  if (timePressure.test(text)) score += 10;
+
+  const contrast = /\b(but|however|before|after|then|while|despite|unlike|instead|rather|actually|really)\b/i;
+  if (contrast.test(text)) score += 10;
+
+  const threshold = text.length >= 80 ? 5 : 0;
+  score += threshold;
 
   return Math.min(score, 100);
 }
