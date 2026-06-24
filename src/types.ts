@@ -98,8 +98,10 @@ export interface SkateConfig {
   minLength: number;
   maxLength: number;
   subtitleStyle: SubtitleStyle;
+  projectDir: string;
   outputDir: string;
   cacheDir: string;
+  tempDir: string;
   ollamaUrl: string;
   crop: boolean;
 }
