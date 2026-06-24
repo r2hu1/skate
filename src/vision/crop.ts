@@ -71,11 +71,12 @@ function calculateCrop(
   const cropWidth = centerCrop.width;
   const cropHeight = centerCrop.height;
 
-  let x = Math.round(face.centerX - cropWidth / 2);
-  let y = Math.round(face.centerY - cropHeight / 3);
-
-  x = Math.max(0, Math.min(x, sourceWidth - cropWidth));
+  const headroom = Math.max(face.height * 1.2, cropHeight * 0.1);
+  let y = Math.round(face.centerY - cropHeight / 2 + headroom);
   y = Math.max(0, Math.min(y, sourceHeight - cropHeight));
+
+  let x = Math.round(face.centerX - cropWidth / 2);
+  x = Math.max(0, Math.min(x, sourceWidth - cropWidth));
 
   return { x, y, width: cropWidth, height: cropHeight };
 }
@@ -89,7 +90,7 @@ function smoothCropPath(
   }
 
   const smoothed: CropFrame[] = [];
-  const windowSize = Math.max(1, Math.floor(fps * 0.15));
+  const windowSize = Math.max(1, Math.floor(fps * 0.3));
 
   for (let i = 0; i < crops.length; i++) {
     const start = Math.max(0, i - windowSize);
