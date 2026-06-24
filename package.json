@@ -1,6 +1,6 @@
 {
   "name": "@r2hu1_npm/skate",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "AI-powered CLI that turns long videos into viral-ready vertical shorts — fully local, no API keys",
   "type": "module",
   "bin": {
