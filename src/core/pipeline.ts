@@ -118,7 +118,7 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
 
     tui.startStep("Render Clips");
     await renderClips(videoPath, selected, config.subtitleStyle, videoOutputDir);
-    tui.done(videoOutputDir);
+    tui.done(videoOutputDir, selected.length);
   }
 
   const result: AnalysisResult = {
