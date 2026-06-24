@@ -42,6 +42,7 @@ export interface ScoredChunk {
 }
 
 export interface RankingResult {
+  index?: number;
   title: string;
   score: number;
   start: number;
