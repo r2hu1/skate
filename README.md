@@ -85,7 +85,9 @@ Config is stored at `~/.skate/config.json` and auto-created on first run.
   "minLength": 20,
   "maxLength": 90,
   "subtitleStyle": "minimal",
-  "outputDir": "./output",
+  "projectDir": ".",
+  "outputDir": "./skate/output",
+  "tempDir": "./skate/temp",
   "cacheDir": "~/.skate/cache",
   "ollamaUrl": "http://localhost:11434",
   "crop": true
@@ -99,7 +101,9 @@ Config is stored at `~/.skate/config.json` and auto-created on first run.
 | `minLength`     | `20`                     | Minimum clip length (seconds)                   |
 | `maxLength`     | `90`                     | Maximum clip length (seconds)                   |
 | `subtitleStyle` | `minimal`                | Subtitle style (`minimal`, `tiktok`, `mrbeast`) |
-| `outputDir`     | `./output`               | Output directory                                |
+| `projectDir`    | `.`                      | Base project directory (set via `skate setup`)  |
+| `outputDir`     | `./skate/output`         | Output directory (derived from projectDir)      |
+| `tempDir`       | `./skate/temp`           | Working temp directory (derived from projectDir)|
 | `cacheDir`      | `~/.skate/cache`         | Cache directory                                 |
 | `ollamaUrl`     | `http://localhost:11434` | Ollama API URL                                  |
 | `crop`          | `true`                   | Enable face tracking for smart vertical crop    |
