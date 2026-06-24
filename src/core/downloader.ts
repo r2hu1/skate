@@ -1,7 +1,8 @@
 import { join, extname } from "path";
+import { tui } from "../ui/tui";
 
 export async function downloadVideo(url: string, outputDir: string): Promise<string> {
-  console.log(`  Downloading from ${url}...`);
+  tui.log(`Downloading from ${url}...`);
 
   const outputTemplate = join(outputDir, "%(id)s.%(ext)s");
 
@@ -32,12 +33,12 @@ export async function downloadVideo(url: string, outputDir: string): Promise<str
     throw new Error(`Download claimed success but file not found: ${outputPath}`);
   }
 
-  console.log(`  Downloaded to: ${outputPath}`);
+  tui.raw(`Downloaded to: ${outputPath}`);
   return outputPath;
 }
 
 export async function extractAudio(videoPath: string, outputDir: string): Promise<string> {
-  console.log("  Extracting audio...");
+  tui.log("Extracting audio...");
 
   const baseName = videoPath.split("/").pop() || videoPath.split("\\").pop() || "audio";
   const nameWithoutExt = baseName.replace(/\.[^.]+$/, "");
@@ -62,6 +63,6 @@ export async function extractAudio(videoPath: string, outputDir: string): Promis
     throw new Error(`Audio extraction failed: ${stderr}`);
   }
 
-  console.log(`  Audio extracted to: ${audioFile}`);
+  tui.raw(`Audio extracted to: ${audioFile}`);
   return audioFile;
 }
