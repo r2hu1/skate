@@ -44,7 +44,7 @@ class Tui {
       this.spinner = null;
     }
     if (outputDir) {
-      console.log(`\n  Output: ${outputDir}/`);
+      console.log(`\n Output: ${outputDir}/`);
     }
     console.log("\n Done!");
   }
@@ -54,7 +54,7 @@ class Tui {
       this.spinner.fail(msg);
       this.spinner = null;
     }
-    console.error(`\n  Error: ${msg}`);
+    console.error(`\n Error: ${msg}`);
   }
 }
 

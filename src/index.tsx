@@ -37,30 +37,66 @@ async function main() {
     switch (command) {
       case "clip": {
         const source = positional[1];
-        if (!source) { console.error("Usage: skate clip <file>"); process.exit(1); }
+        if (!source) {
+          console.error("Usage: skate clip <file>");
+          process.exit(1);
+        }
         const file = Bun.file(source);
-        if (!(await file.exists())) { console.error(`File not found: ${source}`); process.exit(1); }
+        if (!(await file.exists())) {
+          console.error(`File not found: ${source}`);
+          process.exit(1);
+        }
         console.log(` Skate — Processing video file`);
         console.log(`   Source: ${source}\n`);
-        await runPipeline({ source, isUrl: false, config, outputDir: config.outputDir, crop });
+        await runPipeline({
+          source,
+          isUrl: false,
+          config,
+          outputDir: config.outputDir,
+          crop,
+        });
         break;
       }
       case "youtube": {
         const url = positional[1];
-        if (!url || !url.startsWith("http")) { console.error("YouTube URL must start with http(s)://"); process.exit(1); }
-        console.log(` Skate — Processing YouTube URL`);
-        console.log(`   Source: ${url}\n`);
-        await runPipeline({ source: url, isUrl: true, config, outputDir: config.outputDir, crop });
+        if (!url || !url.startsWith("http")) {
+          console.error("YouTube URL must start with http(s)://");
+          process.exit(1);
+        }
+        console.log(`Processing YouTube URL`);
+        console.log(`Source: ${url}\n`);
+        await runPipeline({
+          source: url,
+          isUrl: true,
+          config,
+          outputDir: config.outputDir,
+          crop,
+        });
         break;
       }
       case "analyze": {
         const source = positional[1];
-        if (!source) { console.error("Usage: skate analyze <file>"); process.exit(1); }
+        if (!source) {
+          console.error("Usage: skate analyze <file>");
+          process.exit(1);
+        }
         const file = Bun.file(source);
-        if (!(await file.exists())) { console.error(`File not found: ${source}`); process.exit(1); }
-        console.log(` Skate — Analyzing ${source}\n`);
-        const result = await runPipeline({ source, isUrl: false, config, outputDir: config.outputDir, skipRender: true, crop });
-        console.log(`\n Analysis complete. ${result.selected.length} clips would be rendered.`);
+        if (!(await file.exists())) {
+          console.error(`File not found: ${source}`);
+          process.exit(1);
+        }
+        console.log(`Analyzing ${source}\n`);
+        const result = await runPipeline({
+          source,
+          isUrl: false,
+          config,
+          outputDir: config.outputDir,
+          skipRender: true,
+          crop,
+        });
+        console.log(
+          `\n Analysis complete. ${result.selected.length} clips would be rendered.`,
+        );
         break;
       }
       case "render":
@@ -79,15 +115,30 @@ async function main() {
         break;
       default:
         if (command.startsWith("http")) {
-          console.log(` Skate — Processing YouTube URL`);
-          console.log(`   Source: ${command}\n`);
-          await runPipeline({ source: command, isUrl: true, config, outputDir: config.outputDir, crop });
+          console.log(`Processing YouTube URL`);
+          console.log(`Source: ${command}\n`);
+          await runPipeline({
+            source: command,
+            isUrl: true,
+            config,
+            outputDir: config.outputDir,
+            crop,
+          });
         } else {
           const file = Bun.file(command);
-          if (!(await file.exists())) { console.error(`File not found: ${command}`); process.exit(1); }
-          console.log(` Skate — Processing video file`);
-          console.log(`   Source: ${command}\n`);
-          await runPipeline({ source: command, isUrl: false, config, outputDir: config.outputDir, crop });
+          if (!(await file.exists())) {
+            console.error(`File not found: ${command}`);
+            process.exit(1);
+          }
+          console.log(`Processing video file`);
+          console.log(`Source: ${command}\n`);
+          await runPipeline({
+            source: command,
+            isUrl: false,
+            config,
+            outputDir: config.outputDir,
+            crop,
+          });
         }
     }
   } catch (err: any) {
@@ -98,7 +149,7 @@ async function main() {
 
 function showHelp() {
   console.log(`
-Skate — AI-Powered YouTube → Shorts CLI
+Skate - AI-Powered YouTube → Shorts CLI
 
 Usage:
   skate <url>                  Auto-detect and process a YouTube URL
