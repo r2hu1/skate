@@ -1,13 +1,14 @@
 import type { FaceTrackPoint, CropFrame } from "../types";
 import { detectFaces } from "../vision/face";
 import { generateCropFrames } from "../vision/crop";
+import { tui } from "../ui/tui";
 
 export async function trackFacesInClip(
   videoPath: string,
   start: number,
   end: number,
 ): Promise<FaceTrackPoint[]> {
-  console.log("  Tracking faces...");
+  tui.log("Tracking faces...");
 
   const timestamps = generateTimestampGrid(start, end);
   const faceMap = await detectFaces(videoPath, timestamps);
