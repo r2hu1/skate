@@ -3,6 +3,7 @@ import { existsSync } from "fs";
 import type { ScoredChunk, CropFrame, SubtitleStyle } from "../types";
 import { generateSRT, generateASS } from "./subtitles";
 import { getSourceFps } from "../vision/crop";
+import { tui } from "../ui/tui";
 
 const FFMPEG_PATHS = [
   "/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg",
@@ -32,7 +33,7 @@ export async function renderClips(
   for (let i = 0; i < selected.length; i++) {
     const chunk = selected[i];
     const clipNum = String(i + 1).padStart(2, "0");
-    console.log(`  Rendering clip ${clipNum}/${String(selected.length).padStart(2, "0")}...`);
+    tui.log(`Rendering clip ${clipNum}/${String(selected.length).padStart(2, "0")}...`);
 
     const clipPath = join(outputDir, "clips", `clip-${clipNum}.mp4`);
     const srtPath = join(outputDir, "captions", `clip-${clipNum}.srt`);
