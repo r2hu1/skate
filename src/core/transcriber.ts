@@ -1,6 +1,7 @@
 import { join } from "path";
 import { homedir } from "os";
 import type { Transcript, TranscriptSegment, WordTimestamp } from "../types";
+import { tui } from "../ui/tui";
 
 const SCRIPTS_DIR = join(import.meta.dir, "..", "..", "scripts");
 const HOME_SCRIPT = join(homedir(), ".skate", "whisper_transcribe.py");
@@ -16,12 +17,12 @@ function findWhisperScript(): string {
 }
 
 export async function transcribeAudio(audioPath: string, cacheDir: string, modelSize = "base"): Promise<Transcript> {
-  console.log("  Transcribing audio...");
+  tui.log("Transcribing audio...");
 
   const cacheFile = cachePath(audioPath, cacheDir);
   const cached = Bun.file(cacheFile);
   if (await cached.exists()) {
-    console.log("  Using cached transcript");
+    tui.raw("Using cached transcript");
     return await cached.json() as Transcript;
   }
 
@@ -69,7 +70,7 @@ export async function transcribeAudio(audioPath: string, cacheDir: string, model
   };
 
   await Bun.write(cacheFile, JSON.stringify(transcript, null, 2));
-  console.log(`  Transcribed ${segments.length} segments (${transcript.language})`);
+  tui.raw(`Transcribed ${segments.length} segments (${transcript.language})`);
   return transcript;
 }
 
