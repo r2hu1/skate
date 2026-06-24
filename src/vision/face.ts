@@ -55,6 +55,9 @@ export async function detectFaces(
   const faceMap = new Map<number, FaceTrackPoint[]>();
   for (const item of raw) {
     const ts = item.timestamp;
+    const w = item.width ?? 0;
+    const h = item.height ?? 0;
+    if (w < 10 || h < 10) continue;
     if (!faceMap.has(ts)) {
       faceMap.set(ts, []);
     }
@@ -63,9 +66,14 @@ export async function detectFaces(
       timestamp: ts,
       centerX: item.centerX ?? 0,
       centerY: item.centerY ?? 0,
-      width: item.width ?? 0,
-      height: item.height ?? 0,
+      width: w,
+      height: h,
     });
+  }
+
+  if (faceMap.size === 0) {
+    console.log("  No faces detected, will use center crop");
+    return faceMap;
   }
 
   console.log(`  Detected faces at ${faceMap.size} timestamps`);
