@@ -5,16 +5,24 @@ import type { SkateConfig, SubtitleStyle } from "./types";
 const CONFIG_DIR = join(homedir(), ".skate");
 const CONFIG_PATH = join(CONFIG_DIR, "config.json");
 
+function derivePaths(projectDir: string): Pick<SkateConfig, "outputDir" | "tempDir"> {
+  return {
+    outputDir: join(projectDir, "skate", "output"),
+    tempDir: join(projectDir, "skate", "temp"),
+  };
+}
+
 const DEFAULT_CONFIG: SkateConfig = {
   model: "llama3.2:3b",
   clips: 10,
   minLength: 20,
   maxLength: 90,
   subtitleStyle: "minimal",
-  outputDir: join(process.cwd(), "output"),
+  projectDir: process.cwd(),
   cacheDir: join(CONFIG_DIR, "cache"),
   ollamaUrl: "http://localhost:11434",
   crop: true,
+  ...derivePaths(process.cwd()),
 };
 
 export function getDefaultConfig(): SkateConfig {
@@ -30,7 +38,10 @@ export async function loadConfig(): Promise<SkateConfig> {
       return { ...DEFAULT_CONFIG };
     }
     const data = await file.json();
-    return { ...DEFAULT_CONFIG, ...data };
+    const merged = { ...DEFAULT_CONFIG, ...data };
+    merged.outputDir = join(merged.projectDir, "skate", "output");
+    merged.tempDir = join(merged.projectDir, "skate", "temp");
+    return merged;
   } catch {
     return { ...DEFAULT_CONFIG };
   }
