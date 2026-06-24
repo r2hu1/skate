@@ -31,7 +31,7 @@ ollama pull llama3.2:3b
 ### via npm (recommended)
 
 ```bash
-npm install -g @r2hu1/skate
+npm install -g @r2hu1_npm/skate
 skate setup
 ```
 
