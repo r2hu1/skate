@@ -3,11 +3,21 @@ os.environ["MPLBACKEND"] = "Agg"
 import cv2
 import numpy as np
 
-CASCADE_PATH = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-face_cascade = cv2.CascadeClassifier(CASCADE_PATH)
+CASCADES = [
+    cv2.data.haarcascades + "haarcascade_frontalface_alt2.xml",
+    cv2.data.haarcascades + "haarcascade_frontalface_default.xml",
+    cv2.data.haarcascades + "haarcascade_profileface.xml",
+]
 
-if face_cascade.empty():
-    print(json.dumps({"error": "Failed to load Haar cascade"}))
+def load_cascade(path):
+    cc = cv2.CascadeClassifier(path)
+    return cc if not cc.empty() else None
+
+cascades = [load_cascade(p) for p in CASCADES]
+cascades = [c for c in cascades if c is not None]
+
+if not cascades:
+    print(json.dumps({"error": "Failed to load any Haar cascades"}))
     sys.exit(1)
 
 
@@ -28,7 +38,9 @@ def detect_faces(video_path: str, timestamps: list[float]) -> list[dict]:
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
+    seen: set[tuple[int, float, float]] = set()
     results = []
+
     for ts in timestamps:
         frame_idx = int(ts * fps)
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
@@ -38,34 +50,41 @@ def detect_faces(video_path: str, timestamps: list[float]) -> list[dict]:
             continue
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        detections = face_cascade.detectMultiScale(
-            gray,
-            scaleFactor=1.1,
-            minNeighbors=5,
-            minSize=(60, 60),
-        )
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        enhanced = clahe.apply(gray)
 
-        for (x, y, w, h) in detections:
-            results.append({
-                "timestamp": round(ts, 2),
-                "centerX": round(x + w / 2, 1),
-                "centerY": round(y + h / 2, 1),
-                "width": round(w, 1),
-                "height": round(h, 1),
-            })
+        best_dets = []
+        for cascade in cascades:
+            for sf, mn, ms in [(1.05, 3, (40, 40)), (1.1, 4, (60, 60)), (1.15, 5, (80, 80))]:
+                dets = cascade.detectMultiScale(
+                    enhanced,
+                    scaleFactor=sf,
+                    minNeighbors=mn,
+                    minSize=ms,
+                )
+                best_dets.extend([(x, y, w, h, sf * mn) for (x, y, w, h) in dets])
+
+        best_dets.sort(key=lambda d: d[4], reverse=True)
+
+        added = 0
+        for (x, y, w, h, _) in best_dets:
+            cx = round(x + w / 2, 1)
+            cy = round(y + h / 2, 1)
+            key = (frame_idx, cx, cy)
+            if key not in seen:
+                seen.add(key)
+                results.append({
+                    "timestamp": round(ts, 2),
+                    "centerX": cx,
+                    "centerY": cy,
+                    "width": round(w, 1),
+                    "height": round(h, 1),
+                })
+                added += 1
+                if added >= 3:
+                    break
 
     cap.release()
-
-    if not results:
-        for ts in timestamps:
-            results.append({
-                "timestamp": round(ts, 2),
-                "centerX": float(width) / 2,
-                "centerY": float(height) / 2,
-                "width": 0,
-                "height": 0,
-            })
-
     return results
 
 
