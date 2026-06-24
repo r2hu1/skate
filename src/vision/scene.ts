@@ -4,7 +4,7 @@ export interface SceneChange {
 }
 
 export async function detectSceneChanges(videoPath: string): Promise<SceneChange[]> {
-  console.log("  Detecting scene changes...");
+  console.log("Detecting scene changes...");
 
   try {
     const proc = Bun.spawnSync([
