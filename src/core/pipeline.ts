@@ -3,6 +3,7 @@ import { existsSync, mkdirSync } from "fs";
 import type { AnalysisResult, PipelineOptions, ScoredChunk } from "../types";
 import { getCacheDir } from "../config";
 import { ensureOllama } from "../ai/ollama";
+import { checkPythonVenv } from "../commands/setup";
 import { downloadVideo, extractAudio } from "./downloader";
 import { transcribeAudio } from "./transcriber";
 import { chunkTranscript } from "./chunker";
@@ -37,6 +38,11 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
   const tempDir = join(tempBase, videoName);
   if (!existsSync(tempDir)) mkdirSync(tempDir, { recursive: true });
   const videoOutputDir = join(outputDir, videoName);
+
+  if (!(await checkPythonVenv())) {
+    tui.warn("Python venv not found — run 'skate setup' first");
+    throw new Error("Python environment not set up. Run: skate setup");
+  }
 
   tui.startStep("Transcribe");
   const audioPath = await extractAudio(videoPath, tempDir);

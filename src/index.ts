@@ -3,6 +3,7 @@ import { loadConfig } from "./config";
 import { renderCommand } from "./commands/render";
 import { watchCommand } from "./commands/watch";
 import { doctorCommand } from "./commands/doctor";
+import { setupCommand } from "./commands/setup";
 import { runPipeline } from "./core/pipeline";
 import { tui } from "./ui/tui";
 
@@ -105,6 +106,9 @@ async function main() {
       case "watch":
         await watchCommand(positional.slice(1), config);
         break;
+      case "setup":
+        await setupCommand();
+        break;
       case "doctor":
         await doctorCommand();
         break;
@@ -158,6 +162,7 @@ Usage:
   skate analyze <file>         Run analysis pipeline only (no render)
   skate render <file>          Render from cached analysis
   skate watch <dir>            Watch directory for new files
+  skate setup                  Install Python deps (whisper + opencv)
   skate doctor                 Check system dependencies
 
 Options:

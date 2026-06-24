@@ -31,8 +31,8 @@ ollama pull llama3.2:3b
 ### via npm (recommended)
 
 ```bash
-npm install -g skate-shorts
-bun run setup-python
+npm install -g @r2hu1/skate
+skate setup
 ```
 
 ### from source
@@ -41,17 +41,17 @@ bun run setup-python
 git clone https://github.com/r2hu1/skate.git
 cd skate
 bun install
-bun run setup-python
+bun run setup
 bun link
 ```
 
 ### Python environment
 
 ```bash
-bun run setup-python
+skate setup
 ```
 
-This creates a virtual environment at `~/.skate/venv` and installs `faster-whisper`, `opencv-contrib-python`, and `numpy`.
+This creates a virtual environment at `~/.skate/venv` and installs `faster-whisper`, `opencv-contrib-python`, and `numpy`. The pipeline will auto-detect if the venv is missing and prompt you to run setup.
 
 ---
 
@@ -63,6 +63,7 @@ skate clip video.mp4                         # local file
 skate analyze video.mp4                      # analyze only (skip render)
 skate render video.mp4                       # render from cached analysis
 skate watch ./videos                         # watch directory for new files
+skate setup                                  # install Python deps (whisper + opencv)
 skate doctor                                 # check dependencies
 ```
 
