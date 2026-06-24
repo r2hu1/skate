@@ -17,7 +17,7 @@ import { tui } from "../ui/tui";
 export async function runPipeline(options: PipelineOptions): Promise<AnalysisResult> {
   const { source, isUrl, config, outputDir, skipDownload, skipRender, crop } = options;
   const cacheDir = getCacheDir(config);
-  const tempBase = join(process.cwd(), "temp");
+  const tempBase = config.tempDir;
 
   let videoPath = source;
   let videoName: string;
