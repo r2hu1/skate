@@ -24,21 +24,10 @@ export interface TranscriptChunk {
   words: WordTimestamp[];
 }
 
-export interface HeuristicScores {
-  speakingRate: number;
-  emotionalLanguage: number;
-  sentimentShift: number;
-  storyStructure: number;
-  engagementHooks: number;
-  total: number;
-}
-
 export interface ScoredChunk {
   index: number;
   chunk: TranscriptChunk;
-  heuristic: HeuristicScores;
   aiScore?: number;
-  combinedScore?: number;
 }
 
 export interface RankingResult {
