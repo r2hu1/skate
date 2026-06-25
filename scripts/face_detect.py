@@ -40,6 +40,7 @@ def detect_faces(video_path: str, timestamps: list[float]) -> list[dict]:
 
     seen: set[tuple[int, float, float]] = set()
     results = []
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
     for ts in timestamps:
         frame_idx = int(ts * fps)
@@ -49,20 +50,21 @@ def detect_faces(video_path: str, timestamps: list[float]) -> list[dict]:
         if not ret:
             continue
 
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        small = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
+        gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY)
         enhanced = clahe.apply(gray)
 
         best_dets = []
+        scale_back = 2.0
         for cascade in cascades:
-            for sf, mn, ms in [(1.05, 3, (40, 40)), (1.1, 4, (60, 60)), (1.15, 5, (80, 80))]:
+            for sf, mn, ms in [(1.05, 3, (30, 30)), (1.1, 4, (50, 50))]:
                 dets = cascade.detectMultiScale(
                     enhanced,
                     scaleFactor=sf,
                     minNeighbors=mn,
                     minSize=ms,
                 )
-                best_dets.extend([(x, y, w, h, sf * mn) for (x, y, w, h) in dets])
+                best_dets.extend([(int(x * scale_back), int(y * scale_back), int(w * scale_back), int(h * scale_back), sf * mn) for (x, y, w, h) in dets])
 
         best_dets.sort(key=lambda d: d[4], reverse=True)
 
