@@ -8,26 +8,12 @@ export async function rankChunks(
   ollamaUrl: string,
   model: string,
 ): Promise<RankingResult[]> {
-  const sorted = [...scoredChunks].sort((a, b) => b.heuristic.total - a.heuristic.total);
-  const candidates = sorted.slice(0, Math.min(topN * 2 + 3, sorted.length));
+  const candidates = scoredChunks.slice(0, Math.min(topN * 2 + 3, scoredChunks.length));
 
   tui.log(`Sending ${candidates.length} top chunks to AI...`);
 
-  try {
-    const results = await rankWithAI(candidates, ollamaUrl, model);
-    return results;
-  } catch (err) {
-    tui.log(`AI ranking failed: ${err instanceof Error ? err.message : String(err)}`);
-    tui.log(`Falling back to heuristic scores`);
-
-    return candidates.map((c, i) => ({
-      title: c.chunk.text.slice(0, 80) + (c.chunk.text.length > 80 ? "..." : ""),
-      score: Math.round((c.heuristic.total / 100) * 10),
-      start: c.chunk.start,
-      end: c.chunk.end,
-      reason: `Heuristic score: ${c.heuristic.total}/100`,
-    }));
-  }
+  const results = await rankWithAI(candidates, ollamaUrl, model);
+  return results;
 }
 
 export function selectClips(
@@ -70,7 +56,6 @@ export function selectClips(
 
     if (chunk) {
       chunk.aiScore = rank.score;
-      chunk.combinedScore = Math.round((chunk.heuristic.total + rank.score * 10) / 2);
       selected.push(chunk);
       usedRanges.push({ start: rank.start, end: rank.end });
     }
