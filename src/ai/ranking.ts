@@ -23,17 +23,6 @@ export async function rankWithAI(
   );
 
   const results = parseRankingResponse(response, chunks);
-  if (results.length === 0) {
-    console.warn("  AI returned empty or unparseable results, falling back to heuristic");
-    return chunks.map((c, i) => ({
-      title:
-        c.chunk.text.slice(0, 80) + (c.chunk.text.length > 80 ? "..." : ""),
-      score: Math.round((c.heuristic.total / 100) * 10),
-      start: c.chunk.start,
-      end: c.chunk.end,
-      reason: `Heuristic score: ${c.heuristic.total}/100`,
-    }));
-  }
   return results;
 }
 
@@ -91,9 +80,9 @@ function fallbackParse(
 
   return originalChunks.map((c, i) => ({
     title: c.chunk.text.slice(0, 80),
-    score: c.heuristic.total / 10,
+    score: 0,
     start: c.chunk.start,
     end: c.chunk.end,
-    reason: `Heuristic fallback: ${c.heuristic.total}/100`,
+    reason: "",
   }));
 }
