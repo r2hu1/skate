@@ -38,7 +38,7 @@ export async function renderCommand(args: string[], config: SkateConfig): Promis
     title: analysis.ranked?.find(r => Math.abs(r.start - s.chunk.start) < 1)?.title || `Clip ${i + 1}`,
     hook: s.chunk.text.slice(0, 60) + "...",
     hashtags: [] as string[],
-    score: s.combinedScore ?? s.heuristic.total,
+    score: s.aiScore ?? 0,
     duration: Math.round(s.chunk.end - s.chunk.start),
     start: s.chunk.start,
     end: s.chunk.end,
