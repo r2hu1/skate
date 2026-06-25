@@ -23,6 +23,11 @@ function parseFlags(args: string[]): { positional: string[]; crop: boolean } {
   return { positional, crop };
 }
 
+process.on("SIGINT", () => {
+  tui.fail("Interrupted");
+  process.exit(130);
+});
+
 async function main() {
   const args = process.argv.slice(2);
 
