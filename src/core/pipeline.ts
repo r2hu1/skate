@@ -7,7 +7,6 @@ import { checkPythonVenv } from "../commands/setup";
 import { downloadVideo, extractAudio } from "./downloader";
 import { transcribeAudio } from "./transcriber";
 import { chunkTranscript } from "./chunker";
-import { scoreChunk } from "./scorer";
 import { rankChunks, selectClips } from "./ranker";
 import { renderClips, exportMetadata } from "./renderer";
 import { trackFacesInClip, generateCropForClip } from "./tracker";
@@ -57,13 +56,12 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
   const scored: ScoredChunk[] = chunks.map((chunk, i) => ({
     index: i,
     chunk,
-    heuristic: scoreChunk(chunk),
   }));
 
   tui.startStep("AI Rank");
   const ollamaReady = await ensureOllama(config.ollamaUrl);
   if (!ollamaReady) {
-    tui.log("Ollama unavailable — skipping AI ranking, using heuristics only");
+    throw new Error("Ollama is required for AI ranking. Run: skate setup");
   }
   const ranked = await rankChunks(scored, config.clips, config.ollamaUrl, config.model);
   tui.setRankings(ranked);
@@ -76,7 +74,7 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
     title: ranked.find(r => Math.abs(r.start - s.chunk.start) < 1)?.title || `Clip ${i + 1}`,
     hook: s.chunk.text.slice(0, 60) + "...",
     hashtags: generateHashtags(s.chunk.text),
-    score: s.combinedScore ?? s.heuristic.total,
+    score: s.aiScore ?? 0,
     duration: Math.round(s.chunk.end - s.chunk.start),
     start: s.chunk.start,
     end: s.chunk.end,
