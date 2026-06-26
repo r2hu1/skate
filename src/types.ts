@@ -113,4 +113,6 @@ export interface PipelineOptions {
   skipDownload?: boolean;
   skipRender?: boolean;
   crop?: boolean;
+  cropMode?: "9:16" | "1";
+  captions?: boolean;
 }
