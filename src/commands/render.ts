@@ -4,7 +4,7 @@ import type { AnalysisResult, SkateConfig } from "../types";
 import { getCacheDir } from "../config";
 import { renderClips, exportMetadata } from "../core/renderer";
 
-export async function renderCommand(args: string[], config: SkateConfig): Promise<void> {
+export async function renderCommand(args: string[], config: SkateConfig, cropMode: "9:16" | "1" = "9:16", captions: boolean = true): Promise<void> {
   if (args.length === 0) {
     console.error("Usage: skate render <file>");
     process.exit(1);
@@ -32,7 +32,7 @@ export async function renderCommand(args: string[], config: SkateConfig): Promis
   console.log(`  Source: ${analysis.sourceFile}`);
 
   const outputDir = join(config.outputDir, videoName);
-  await renderClips(analysis.sourceFile, analysis.selected, config.subtitleStyle, outputDir);
+  await renderClips(analysis.sourceFile, analysis.selected, config.subtitleStyle, outputDir, cropMode, captions);
 
   const metadata = analysis.selected.map((s, i) => ({
     title: analysis.ranked?.find(r => Math.abs(r.start - s.chunk.start) < 1)?.title || `Clip ${i + 1}`,
