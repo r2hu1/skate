@@ -26,6 +26,8 @@ export async function renderClips(
   selected: ScoredChunk[],
   subtitleStyle: SubtitleStyle,
   outputDir: string,
+  cropMode: "9:16" | "1" = "9:16",
+  captions: boolean = true,
 ): Promise<void> {
   ensureOutputDirs(outputDir);
   const sourceFps = getSourceFps(sourceFile);
@@ -39,12 +41,13 @@ export async function renderClips(
     const srtPath = join(outputDir, "captions", `clip-${clipNum}.srt`);
     const assPath = srtPath.replace(/\.srt$/, ".ass");
 
-    const chunkStart = chunk.chunk.start;
-    await Bun.write(srtPath, generateSRT(chunk.chunk.words, subtitleStyle, chunkStart));
-    await Bun.write(assPath, generateASS(chunk.chunk.words, subtitleStyle, chunkStart));
+    await Bun.write(srtPath, generateSRT(chunk.chunk.words, subtitleStyle, chunk.chunk.start));
+    if (captions) {
+      await Bun.write(assPath, generateASS(chunk.chunk.words, subtitleStyle, chunk.chunk.start));
+    }
 
     const cropData = (chunk as any).cropData;
-    await cutClip(sourceFile, clipPath, chunk.chunk.start, chunk.chunk.end, assPath, subtitleStyle, cropData, sourceFps);
+    await cutClip(sourceFile, clipPath, chunk.chunk.start, chunk.chunk.end, captions ? assPath : undefined, subtitleStyle, cropData, sourceFps, cropMode);
   }
 }
 
@@ -57,10 +60,13 @@ export async function cutClip(
   subtitleStyle?: SubtitleStyle,
   cropData?: CropFrame[],
   sourceFps: number = 30,
+  cropMode: "9:16" | "1" = "9:16",
 ): Promise<void> {
   const duration = end - start;
   const tempRaw = outputPath.replace(".mp4", "-raw.mp4");
   const filterParts: string[] = [];
+
+  const outH = cropMode === "1" ? 1080 : 1920;
 
   if (cropData && cropData.length > 0) {
     const avgX = Math.round(cropData.reduce((s, c) => s + c.x, 0) / cropData.length);
@@ -68,8 +74,8 @@ export async function cutClip(
     filterParts.push(`crop=${cropData[0].width}:${cropData[0].height}:${avgX}:${avgY}`);
   }
 
-  filterParts.push("scale=1080:1920:force_original_aspect_ratio=decrease");
-  filterParts.push("pad=1080:1920:(ow-iw)/2:(oh-ih)/2");
+  filterParts.push(`scale=1080:${outH}:force_original_aspect_ratio=decrease`);
+  filterParts.push(`pad=1080:${outH}:(ow-iw)/2:(oh-ih)/2`);
 
   const filter = filterParts.join(",");
 
