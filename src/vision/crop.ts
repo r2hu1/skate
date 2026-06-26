@@ -2,7 +2,6 @@ import type { FaceTrackPoint, CropFrame } from "../types";
 
 const TARGET_WIDTH = 1080;
 const TARGET_HEIGHT = 1920;
-const ASPECT_RATIO = TARGET_WIDTH / TARGET_HEIGHT;
 
 export function generateCropFrames(
   faceTracks: FaceTrackPoint[],
@@ -10,13 +9,16 @@ export function generateCropFrames(
   sourceHeight: number,
   duration: number,
   fps: number = 30,
+  cropMode: "9:16" | "1" = "9:16",
 ): CropFrame[] {
+  const aspectRatio = cropMode === "1" ? 1 : TARGET_WIDTH / TARGET_HEIGHT;
+
   if (faceTracks.length === 0) {
-    return generateCenterCrop(sourceWidth, sourceHeight, duration, fps);
+    return generateCenterCrop(sourceWidth, sourceHeight, duration, fps, aspectRatio);
   }
 
   const rawCrops = faceTracks.map(ft => ({
-    ...calculateCrop(ft, sourceWidth, sourceHeight),
+    ...calculateCrop(ft, sourceWidth, sourceHeight, aspectRatio),
     timestamp: ft.timestamp,
   }));
   return smoothCropPath(rawCrops, fps);
@@ -27,9 +29,10 @@ function generateCenterCrop(
   sourceHeight: number,
   duration: number,
   fps: number,
+  aspectRatio: number,
 ): CropFrame[] {
   const frameCount = Math.floor(duration * fps);
-  const crop = calculateCenterCrop(sourceWidth, sourceHeight);
+  const crop = calculateCenterCrop(sourceWidth, sourceHeight, aspectRatio);
   const frames: CropFrame[] = [];
 
   for (let i = 0; i < frameCount; i++) {
@@ -42,16 +45,16 @@ function generateCenterCrop(
   return frames;
 }
 
-function calculateCenterCrop(sourceWidth: number, sourceHeight: number): Omit<CropFrame, "timestamp"> {
+function calculateCenterCrop(sourceWidth: number, sourceHeight: number, aspectRatio: number): Omit<CropFrame, "timestamp"> {
   let cropWidth: number;
   let cropHeight: number;
 
-  if (sourceWidth / sourceHeight > ASPECT_RATIO) {
+  if (sourceWidth / sourceHeight > aspectRatio) {
     cropHeight = sourceHeight;
-    cropWidth = Math.round(cropHeight * ASPECT_RATIO);
+    cropWidth = Math.round(cropHeight * aspectRatio);
   } else {
     cropWidth = sourceWidth;
-    cropHeight = Math.round(cropWidth / ASPECT_RATIO);
+    cropHeight = Math.round(cropWidth / aspectRatio);
   }
 
   return {
@@ -66,8 +69,9 @@ function calculateCrop(
   face: FaceTrackPoint,
   sourceWidth: number,
   sourceHeight: number,
+  aspectRatio: number,
 ): Omit<CropFrame, "timestamp"> {
-  const centerCrop = calculateCenterCrop(sourceWidth, sourceHeight);
+  const centerCrop = calculateCenterCrop(sourceWidth, sourceHeight, aspectRatio);
   const cropWidth = centerCrop.width;
   const cropHeight = centerCrop.height;
 
