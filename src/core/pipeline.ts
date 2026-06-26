@@ -14,7 +14,7 @@ import { getSourceDimensions } from "../vision/crop";
 import { tui } from "../ui/tui";
 
 export async function runPipeline(options: PipelineOptions): Promise<AnalysisResult> {
-  const { source, isUrl, config, outputDir, skipDownload, skipRender, crop } = options;
+  const { source, isUrl, config, outputDir, skipDownload, skipRender, crop, cropMode, captions } = options;
   const cacheDir = getCacheDir(config);
   const tempBase = config.tempDir;
 
@@ -107,7 +107,7 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
         const s = selected[i];
         tui.log(`Tracking faces for clip ${i + 1}/${selected.length}`);
         const faces = await trackFacesInClip(videoPath, s.chunk.start, s.chunk.end);
-        const cropData = await generateCropForClip(videoPath, faces, srcInfo.width, srcInfo.height, s.chunk.end - s.chunk.start);
+        const cropData = await generateCropForClip(videoPath, faces, srcInfo.width, srcInfo.height, s.chunk.end - s.chunk.start, cropMode);
         cropMap[s.index] = cropData;
       }
       await Bun.write(cropCacheFile, JSON.stringify(cropMap));
@@ -121,7 +121,7 @@ export async function runPipeline(options: PipelineOptions): Promise<AnalysisRes
     }
 
     tui.startStep("Render Clips");
-    await renderClips(videoPath, selected, config.subtitleStyle, videoOutputDir);
+    await renderClips(videoPath, selected, config.subtitleStyle, videoOutputDir, cropMode, captions);
     tui.done(videoOutputDir, selected.length);
   }
 
