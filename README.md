@@ -67,14 +67,22 @@ skate render video.mp4                       # render from cached analysis
 skate watch ./videos                         # watch directory for new files
 skate setup                                  # install Python deps (whisper + opencv)
 skate doctor                                 # check dependencies
+
+# With flags
+skate clip video.mp4 --crop=1               # 1:1 square crop for mobile shorts
+skate clip video.mp4 --captions=false       # no captions burned in
+skate clip video.mp4 --crop=1 --captions=false  # both
 ```
 
 ### Options
 
-| Flag          | Description                            |
-| ------------- | -------------------------------------- |
-| `--no-crop`   | Disable face tracking, use center crop |
-| `--crop=true` | Enable face tracking (default)         |
+| Flag            | Description                                |
+| --------------- | ------------------------------------------ |
+| `--no-crop`     | Disable face tracking, use center crop     |
+| `--crop=true`   | Enable face tracking (default)             |
+| `--crop=1`      | Crop to 1:1 square for mobile shorts       |
+| `--captions=false` | Disable caption burn-in                 |
+| `--no-captions`   | Disable caption burn-in                 |
 
 ### Configuration
 
