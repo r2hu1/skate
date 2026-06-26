@@ -30,8 +30,9 @@ export async function generateCropForClip(
   sourceWidth: number,
   sourceHeight: number,
   duration: number,
+  cropMode: "9:16" | "1" = "9:16",
 ): Promise<CropFrame[]> {
-  return generateCropFrames(faceTracks, sourceWidth, sourceHeight, duration);
+  return generateCropFrames(faceTracks, sourceWidth, sourceHeight, duration, 30, cropMode);
 }
 
 function generateTimestampGrid(start: number, end: number, sampleRate: number = 0.2): number[] {
