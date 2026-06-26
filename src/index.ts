@@ -8,19 +8,28 @@ import { runPipeline } from "./core/pipeline";
 import { tui } from "./ui/tui";
 import pkg from "../package.json";
 
-function parseFlags(args: string[]): { positional: string[]; crop: boolean } {
+function parseFlags(args: string[]): { positional: string[]; crop: boolean; cropMode: "9:16" | "1"; captions: boolean } {
   let crop = true;
+  let cropMode: "9:16" | "1" = "9:16";
+  let captions = true;
   const positional: string[] = [];
   for (const arg of args) {
     if (arg === "--crop=false" || arg === "--no-crop") {
       crop = false;
+    } else if (arg === "--crop=1") {
+      crop = true;
+      cropMode = "1";
     } else if (arg.startsWith("--crop=")) {
       crop = arg.split("=")[1] !== "false";
+    } else if (arg === "--captions=false" || arg === "--no-captions") {
+      captions = false;
+    } else if (arg === "--captions=true") {
+      captions = true;
     } else {
       positional.push(arg);
     }
   }
-  return { positional, crop };
+  return { positional, crop, cropMode, captions };
 }
 
 process.on("SIGINT", () => {
@@ -37,7 +46,7 @@ async function main() {
   }
 
   const config = await loadConfig();
-  const { positional, crop } = parseFlags(args);
+  const { positional, crop, cropMode, captions } = parseFlags(args);
   const command = positional[0];
 
   try {
@@ -61,6 +70,8 @@ async function main() {
           config,
           outputDir: config.outputDir,
           crop,
+          cropMode,
+          captions,
         });
         break;
       }
@@ -78,6 +89,8 @@ async function main() {
           config,
           outputDir: config.outputDir,
           crop,
+          cropMode,
+          captions,
         });
         break;
       }
@@ -100,6 +113,8 @@ async function main() {
           outputDir: config.outputDir,
           skipRender: true,
           crop,
+          cropMode,
+          captions,
         });
         console.log(
           `\n Analysis complete. ${result.selected.length} clips would be rendered.`,
@@ -107,7 +122,7 @@ async function main() {
         break;
       }
       case "render":
-        await renderCommand(positional.slice(1), config);
+        await renderCommand(positional.slice(1), config, cropMode, captions);
         break;
       case "watch":
         await watchCommand(positional.slice(1), config);
@@ -137,6 +152,8 @@ async function main() {
             config,
             outputDir: config.outputDir,
             crop,
+            cropMode,
+            captions,
           });
         } else {
           const file = Bun.file(command);
@@ -152,6 +169,8 @@ async function main() {
             config,
             outputDir: config.outputDir,
             crop,
+            cropMode,
+            captions,
           });
         }
     }
@@ -180,6 +199,9 @@ Options:
   --version, -v    Show version
   --no-crop        Disable face tracking, use center crop
   --crop=true      Enable face tracking (default)
+  --crop=1         Crop to 1:1 square for mobile shorts
+  --captions=false Disable caption burn-in
+  --no-captions    Disable caption burn-in
 `);
 }
 
