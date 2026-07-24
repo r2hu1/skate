@@ -6,6 +6,12 @@ Saw a bunch of paid tools doing this — why pay when you can run it locally? Sk
 
 ![Preview](images/preview.png)
 
+# Video Proof
+
+I built a random YouTube channel powered entirely by an AI agent. The agent was given access to skate-cli, which it used to find, clip, and publish random videos automatically. Feel free to check the channel for proof.
+
+![Video Proof](https://www.youtube.com/@the.ceo.podcast)
+
 ---
 
 ## Requirements
